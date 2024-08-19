@@ -1,4 +1,4 @@
-# Holds the code for the lanague
+# Holds the code for the langauge
 #################################
 # ------------------ CONSTANTS
 ##################################
