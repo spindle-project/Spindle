@@ -9,7 +9,7 @@ from strings_with_arrows import *
 DIGITS = "0123456789"
 
 #################################
-# ------------------ Error 
+# ------------------ ERRORS 
 ##################################
 
 class Error:
@@ -199,8 +199,6 @@ class BinOpNode:
         self.pos_start = self.left_node.pos_start
         self.pos_end = self.right_node.pos_end
 
-
-    
     def __repr__(self):
         return f'({self.left_node}, {self.op_tok}, {self.right_node})'
     
@@ -264,7 +262,6 @@ class Parser:
                 "Expected '+', '-', '*' or '/'"
                 ))
         return res
-
 ########################################################
     def factor(self):
         res = ParseResult()
@@ -324,7 +321,6 @@ class Parser:
 #################################
 # ------------------ RUNTIME RESULT 
 ##################################
-
 class RTResult:
     def __init__(self):
         self.value = None
@@ -346,7 +342,6 @@ class RTResult:
 #################################
 # ------------------ VALUES 
 ##################################
-
 class Number:
     def __init__(self,value):
         self.value = value
@@ -390,9 +385,7 @@ class Interpreter:
     
     def no_visit_method(self, node):
         raise Exception(f'No visit_{type(node).__name__} method defined!')
-
 ###############################################################
-
     def visit_NumberNode(self, node):
         return RTResult().success(
             Number(node.tok.value).set_pos(node.pos_start, node.pos_end)
@@ -439,7 +432,6 @@ class Interpreter:
 #################################
 # ------------------ RUN 
 ##################################
-
 def run(fn, text):
     lexer = Lexer(fn, text)
     tokens, error = lexer.make_tokens()
