@@ -2,11 +2,19 @@
 
 **This is the programming language found in the AP Computer Science Exam Reference Sheet, except it's actually a language you can code in!**
 
-For example:
+For example, varibles can be assigned with:
 ```
-a ← value or a <- value
+a <- [value] OR a <-- [value]
 ```
-Assigns the value of [value] to the varible a
+
+Here's how you can assign variables to other varibles
+```
+a <-- 10
+b <-- 10
+c <-- 0 + a
+a <-- b
+b <-- c
+```
 
 
 The AP Computer Science Exam Reference Sheet can be found here:  *https://apcentral.collegeboard.org/media/pdf/ap-computer-science-principles-exam-reference-sheet.pdf* 
