@@ -392,7 +392,14 @@ class Parser:
 	def expr(self):
 		res = ParseResult()
 
-		if self.current_tok.type == TT_IDENTIFIER and self.peek(1).type == TT_EQ:
+		if self.current_tok.type == TT_IDENTIFIER:
+			print(11)
+			print(self.current_tok.type)
+			if self.peek(1).type not in  (TT_IDENTIFIER ,TT_EQ):
+				return res.failure(InvalidSyntaxError(
+					self.current_tok.pos_start, self.current_tok.pos_end,
+					"Expected '<-' or '<--'"
+				))
 			var_name = self.current_tok
 			#res.register_advancement()
 			self.advance()	
