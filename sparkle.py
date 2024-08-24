@@ -149,7 +149,6 @@ class Lexer:
 
 	def make_tokens(self):
 		tokens = []
-
 		while self.current_char != None:
 			if self.current_char in ' \t':
 				self.advance()
@@ -230,6 +229,7 @@ class Lexer:
 		if id_str not in KEYWORDS:
 			print(id_str)
 			print("IDENTIFIER!!!")
+			
 			return Token(TT_IDENTIFIER, id_str, pos_start, self.pos)
 
 		
@@ -326,6 +326,9 @@ class Parser:
 		if self.tok_idx < len(self.tokens):
 			self.current_tok = self.tokens[self.tok_idx]
 		return self.current_tok
+	
+	def peek(self, amount):
+		return self.tokens[self.tok_idx+amount]
 
 	def parse(self):
 		res = self.expr()
@@ -388,15 +391,15 @@ class Parser:
 
 	def expr(self):
 		res = ParseResult()
-		if self.current_tok.type == TT_IDENTIFIER:
-			print("VAR FOUND IN EXPR !!")
+
+		if self.current_tok.type == TT_IDENTIFIER and self.peek(1).type == TT_EQ:
 			var_name = self.current_tok
-			res.register(self.advance())
-			if self.current_tok.type == TT_EQ:
-				res.register(self.advance())
-				expr =  res.register(self.expr())
-				if res.error: return res
-				return res.success(VarAssignNode(var_name, expr))
+			#res.register_advancement()
+			self.advance()	
+			self.advance()
+			expr = res.register(self.expr())
+			if res.error: return res
+			return res.success(VarAssignNode(var_name, expr))
 	
 		return self.bin_op(self.term, (TT_PLUS, TT_MINUS))
 
