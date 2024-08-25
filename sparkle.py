@@ -13,7 +13,7 @@ import string
 DIGITS = '0123456789'
 LOWERCASE_LETTERS = string.ascii_lowercase
 LETTERS_DIGITS = LOWERCASE_LETTERS + DIGITS
-KEYWORDS = ['NOT']
+KEYWORDS = ['test']
 
 #######################################
 # ERRORS
@@ -227,6 +227,9 @@ class Lexer:
 
 		if id_str not in KEYWORDS:
 			return Token(TT_IDENTIFIER, id_str, pos_start, self.pos)
+		else:
+			return Token(TT_INT, int(0), pos_start, self.pos)
+
 
 		
 
