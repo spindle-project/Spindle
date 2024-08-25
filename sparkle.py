@@ -180,12 +180,15 @@ class Lexer:
 					if self.current_char == '-':
 						self.advance()
 				else:
+					print("less than")
 					tokens.append(self.make_less_than())
 			elif self.current_char == '>':
 				tokens.append(self.make_greater_than())
 
 			elif self.current_char == '+':
 				tokens.append(Token(TT_PLUS, pos_start=self.pos))
+				self.advance()
+
 			elif self.current_char == '=':
 				self.advance()
 				if self.current_char == '=':
@@ -484,8 +487,7 @@ class Parser:
 	def expr(self):
 		res = ParseResult()
 
-		if self.current_tok.type == TT_IDENTIFIER:
-			#print(self.current_tok.type)
+		if self.current_tok.type == TT_IDENTIFIER and self.peek(1).type  in TT_EQ :
 			if self.peek(1).type not in  (TT_IDENTIFIER ,TT_EQ):
 				return res.failure(InvalidSyntaxError(
 					self.current_tok.pos_start, self.current_tok.pos_end,
