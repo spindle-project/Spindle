@@ -12,7 +12,9 @@ import string
 
 DIGITS = '0123456789'
 LOWERCASE_LETTERS = string.ascii_lowercase
-LETTERS_DIGITS = LOWERCASE_LETTERS + DIGITS
+UPPERCASE_LETTERS = string.ascii_uppercase
+LETTERS = UPPERCASE_LETTERS + LOWERCASE_LETTERS
+LETTERS_DIGITS = LETTERS + DIGITS
 KEYWORDS = ['AND', 
 	'OR', 
 	'NOT' ]
@@ -170,7 +172,7 @@ class Lexer:
 			elif self.current_char in DIGITS:
 				tokens.append(self.make_number())
 				#varibles
-			elif self.current_char in LOWERCASE_LETTERS:
+			elif self.current_char in LETTERS:
 				tokens.append(self.make_identifier())
 			elif self.current_char == '<':
 				self.advance()
@@ -259,7 +261,7 @@ class Lexer:
 		if id_str not in KEYWORDS:
 			return Token(TT_IDENTIFIER, id_str, pos_start, self.pos)
 		else:
-			return Token(TT_INT, int(0), pos_start, self.pos)
+			return Token(TT_KEYWORD, id_str, pos_start, self.pos)
 
 	def make_not_equals(self):
 		pos_start = self.pos.copy()
@@ -476,7 +478,6 @@ class Parser:
 		node = res.register(self.bin_op(self.arith_expr, (TT_EE, TT_NE, TT_LT, TT_GT, TT_LTE, TT_GTE)))
 		
 		if res.error:
-			print(res.error)
 			return res.failure(InvalidSyntaxError(
 				self.current_tok.pos_start, self.current_tok.pos_end,
 				"Expected int, float, identifier, '+', '-', '(' or 'NOT'"
@@ -753,6 +754,8 @@ class Interpreter:
 			result, error = left.anded_by(right)
 		elif node.op_tok.matches(TT_KEYWORD, 'OR'):
 			result, error = left.ored_by(right)
+		elif node.op_tok.matches(TT_KEYWORD, "NOT"):
+			result, error = left.notted()
 
 		if error:
 			return res.failure(error)
@@ -781,7 +784,9 @@ class Interpreter:
 # RUN
 #######################################
 global_symbol_table = SymbolTable()
-global_symbol_table.set("Null", Number(0))
+global_symbol_table.set("NULL", Number(0))
+global_symbol_table.set("FALSE", Number(0))
+global_symbol_table.set("TRUE", Number(1))
 def run(fn, text):
 	# Generate tokens
 	lexer = Lexer(fn, text)
