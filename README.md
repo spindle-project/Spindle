@@ -1,22 +1,45 @@
 # ✨ Sparkle: An Overview
 
-**This is the programming language found in the AP Computer Science Exam Reference Sheet, except it's actually a language you can code in!**
+**This is the language used in the AP Computer Science Exam, except it's actually a programming language!**
 
-For example, varibles can be assigned with:
+## ✖️ Variables:
+Varibles can be assigned a value using "<--" or "<-"
+For example, the following code sets a to 10 and then to 13 (a's value plus 3). 
 ```
-a <- [value] OR a <-- [value]
+a <- 10
+a <-- 13
 ```
+ Varibles can be assigned to other varibles!
+```
+b <-- a / 2
+```
+If you added this line to the lines above, it would set b to a's value divided by 2, resulting in 6.5
 
-Here's how you can assign variables to other varibles
-```
+<details>
+  <summary>How would you swap the values of two variables? </summary>
+  
+  ```m
 a <-- 10
 b <-- 10
-c <-- 0 + a
+c <--  a
 a <-- b
 b <-- c
 ```
+  
+</details>
 
+## 🆚 Comparison Operators:
+<b>In this language: <br />
+  0 is FALSE <br />
+  1 is TRUE </b>
 
-The AP Computer Science Exam Reference Sheet can be found here:  *https://apcentral.collegeboard.org/media/pdf/ap-computer-science-principles-exam-reference-sheet.pdf* 
+  The supported comparison operators are: 
+  1. < &nbsp;&nbsp;   &nbsp;&nbsp; 4. \>= 
+  2. <= &nbsp;&nbsp;  5. ==
+  3. \> &nbsp;&nbsp; &nbsp;&nbsp;  6. !=
 
-Writen with the help of a tutorial by CodePulse, which can be found here: *https://youtu.be/Eythq9848Fg?si=yDuSPkEzG2y1X1cm*
+## 📖 Resources
+
+ <b>The AP Computer Science Exam Reference Sheet can be found here:  *https://apcentral.collegeboard.org/media/pdf/ap-computer-science-principles-exam-reference-sheet.pdf*</b>
+
+<b> Writen with the help of a tutorial by CodePulse, which can be found here: *https://youtu.be/Eythq9848Fg?si=yDuSPkEzG2y1X1cm*</b>
