@@ -119,6 +119,8 @@ TT_GT = 'GT' #
 TT_LTE	= 'LTE' #
 TT_GTE	= 'GTE' #
 TT_EOF	= 'EOF'
+TT_LBRACE = 'TT_LBRACE' # {
+TT_RBRACE = 'TT_RBRACE' # }
 # prob not use
 TT_KEYWORD = 'KEYWORD'
 KEYWORDS = ['AND', 
@@ -127,7 +129,6 @@ KEYWORDS = ['AND',
 	'IF',
 	'ELSE',
 	'THEN',
-	'ELIF',
 	]
 class Token:
 	def __init__(self, type_, value=None, pos_start=None, pos_end=None):
@@ -190,7 +191,13 @@ class Lexer:
 					tokens.append(self.make_less_than())
 			elif self.current_char == '>':
 				tokens.append(self.make_greater_than())
-
+			elif self.current_char == '{':
+				tokens.append(Token(TT_LBRACE, pos_start=self.pos))
+				self.advance()
+			elif self.current_char == '}':
+				tokens.append(Token(TT_RBRACE, pos_start=self.pos))
+				self.advance()
+				self.advance()
 			elif self.current_char == '+':
 				tokens.append(Token(TT_PLUS, pos_start=self.pos))
 				self.advance()
@@ -413,7 +420,7 @@ class Parser:
 		res = self.expr()
 
 		
-		if not res.error and self.current_tok.type not in (TT_EOF, TT_IDENTIFIER):
+		if not res.error and self.current_tok.type not in (TT_EOF, TT_IDENTIFIER,TT_RBRACE):
 			return res.failure(InvalidSyntaxError(
 				self.current_tok.pos_start, self.current_tok.pos_end,
 				"Expected '+', '-', '*', '/', '^', '==', '!=', '<', '>', <=', '>=', 'AND' or 'OR'"
@@ -437,10 +444,10 @@ class Parser:
 		condition = res.register(self.expr())
 		if res.error: return res
 
-		if not self.current_tok.matches(TT_KEYWORD, 'THEN'):
+		if not self.current_tok.type == TT_LBRACE:
 			return res.failure(InvalidSyntaxError(
 				self.current_tok.pos_start, self.current_tok.pos_end,
-				f"Expected 'THEN'"
+				"Expected '{'"
 			))
 
 		res.register_advancement()
@@ -450,31 +457,34 @@ class Parser:
 		if res.error: return res
 		cases.append((condition, expr))
 
-		while self.current_tok.matches(TT_KEYWORD, 'ELIF'):
-			res.register_advancement()
-			self.advance()
-
-			condition = res.register(self.expr())
-			if res.error: return res
-
-			if not self.current_tok.matches(TT_KEYWORD, 'THEN'):
-				return res.failure(InvalidSyntaxError(
-					self.current_tok.pos_start, self.current_tok.pos_end,
-					f"Expected 'THEN'"
-				))
-
-			res.register_advancement()
-			self.advance()
-
-			expr = res.register(self.expr())
-			if res.error: return res
-			cases.append((condition, expr))
+		if not self.current_tok.type == TT_RBRACE:
+			return res.failure(InvalidSyntaxError(
+				self.current_tok.pos_start, self.current_tok.pos_end,
+				"Expected '}'"
+			))
+		
+		res.register_advancement()
+		self.advance()
 
 		if self.current_tok.matches(TT_KEYWORD, 'ELSE'):
 			res.register_advancement()
 			self.advance()
+			if not self.current_tok.type == TT_LBRACE:
+				return res.failure(InvalidSyntaxError(
+				self.current_tok.pos_start, self.current_tok.pos_end,
+				"Expected '{'"
+			))
+
+			res.register_advancement()
+			self.advance()
 
 			else_case = res.register(self.expr())
+			if not self.current_tok.type == TT_RBRACE:
+				return res.failure(InvalidSyntaxError(
+					self.current_tok.pos_start, self.current_tok.pos_end,
+					"Expected '}'"
+				))
+
 			if res.error: return res
 
 		return res.success(IfNode(cases, else_case))
@@ -893,7 +903,7 @@ def run(fn, text):
 	# Generate tokens
 	lexer = Lexer(fn, text)
 	tokens, error = lexer.make_tokens()
-
+	#print(tokens)
 	if error: return None, error
 	
 	# Generate AST
