@@ -38,6 +38,18 @@ b <-- c
   2. <= &nbsp;&nbsp;  5. ==
   3. \> &nbsp;&nbsp; &nbsp;&nbsp;  6. !=
 
+## ❔ If Statements:
+If Statements can be defined with the keyword IF, and then the expression that must be true. The code that is to be ran when the the condition is met must be wrapred in brackets. If the condition for the IF statement is false, you can write an ELSE statement that will be ran instead
+```
+a <--- 5
+IF a==5{
+1
+}
+ELSE {
+0
+}
+```
+
 ## 📖 Resources
 
  <b>The AP Computer Science Exam Reference Sheet can be found here:  *https://apcentral.collegeboard.org/media/pdf/ap-computer-science-principles-exam-reference-sheet.pdf*</b>
