@@ -128,7 +128,7 @@ KEYWORDS = ['AND',
 	'NOT', 
 	'IF',
 	'ELSE',
-	'THEN',
+	'TIMES',
 	'FOR',
 	'TO',
 	'STEP',
@@ -183,7 +183,22 @@ class Lexer:
 				tokens.append(self.make_number())
 				#varibles
 			elif self.current_char in LETTERS:
-				tokens.append(self.make_identifier())
+				#TEST for For loop
+				if self.current_char == 'F':
+					self.advance()
+					if self.current_char == 'O':
+						self.advance()
+						if self.current_char == "R":
+							for i in range(3):
+								self.unadvance()
+							tokens.append(self.make_identifier("FOR_LOOP_BYPASS"))
+							if self.make_identifier("FOR_LOOP_IDENITIFER_BYPASS") != None:
+								tokens.append(self.make_identifier("FOR_LOOP_IDENITIFER_BYPASS"))
+
+				else: # No for loop here :( Undo our actions
+					#self.unadvance()
+				# Append the identifier token like normal
+					tokens.append(self.make_identifier())
 			elif self.current_char == '<':
 				self.advance()
 				if self.current_char == '-':
@@ -244,14 +259,17 @@ class Lexer:
 				return [], IllegalCharError(pos_start, self.pos, "'" + char + "'")
 
 		tokens.append(Token(TT_EOF, pos_start=self.pos))
+		tokens  = [i for i in tokens if i is not None]
 		return tokens, None
 
 	def make_number(self):
 		num_str = ''
 		dot_count = 0
+		print(f'starting nu: {self.current_char}')
 		pos_start = self.pos.copy()
-
+		
 		while self.current_char != None and self.current_char in DIGITS + '.':
+			print(self.current_char)
 			if self.current_char == '.':
 				if dot_count == 1: break
 				dot_count += 1
@@ -259,24 +277,35 @@ class Lexer:
 			else:
 				num_str += self.current_char
 			self.advance()
-
+			print(f'next char: {self.current_char}')
+		if self.current_char != None and self.current_char in DIGITS + '.':
+			num_str += self.current_char
 		if dot_count == 0:
 			return Token(TT_INT, int(num_str), pos_start, self.pos)
 		else:
 			return Token(TT_FLOAT, float(num_str), pos_start, self.pos)
 		
-	def make_identifier(self):
-		id_str = ''
+	def make_identifier(self, bypass = None):
 		pos_start = self.pos.copy()
-
+		if bypass == "FOR_LOOP_BYPASS":
+			#self.advance()
+			return Token(TT_KEYWORD, "FOR", pos_start, self.pos)
+		if bypass == "FOR_LOOP_IDENITIFER_BYPASS":
+			#self.advance()
+			return Token(TT_IDENTIFIER, "n", self.pos, self.pos)
+			#FOR_LOOP_IDENITIFER_BYPASS
+		id_str = ''
 		while self.current_char != None and self.current_char in LETTERS_DIGITS + '_':
 			id_str += self.current_char
 			self.advance()
-
+		print(f'making identifier: {id_str}' )
+		if id_str == "":
+			return None #stop the functon!
 		if id_str not in KEYWORDS:
 			return Token(TT_IDENTIFIER, id_str, pos_start, self.pos)
 		else:
 			return Token(TT_KEYWORD, id_str, pos_start, self.pos)
+
 
 	def make_not_equals(self):
 		pos_start = self.pos.copy()
@@ -533,29 +562,14 @@ class Parser:
 			))
 
 		var_name = self.current_tok
-		res.register_advancement()
-		self.advance()
+		print(var_name)
 
-		if self.current_tok.type != TT_EQ:
-			return res.failure(InvalidSyntaxError(
-				self.current_tok.pos_start, self.current_tok.pos_end,
-				f"Expected '='"
-			))
 		
 		res.register_advancement()
 		self.advance()
 
-		start_value = res.register(self.expr())
+		start_value = 0
 		if res.error: return res
-
-		if not self.current_tok.matches(TT_KEYWORD, 'TO'):
-			return res.failure(InvalidSyntaxError(
-				self.current_tok.pos_start, self.current_tok.pos_end,
-				f"Expected 'TO'"
-			))
-		
-		res.register_advancement()
-		self.advance()
 
 		end_value = res.register(self.expr())
 		if res.error: return res
@@ -568,11 +582,11 @@ class Parser:
 			if res.error: return res
 		else:
 			step_value = None
-
-		if not self.current_tok.matches(TT_KEYWORD, 'THEN'):
+		print(self.current_tok)
+		if not self.current_tok.matches(TT_KEYWORD, 'TIMES'):
 			return res.failure(InvalidSyntaxError(
 				self.current_tok.pos_start, self.current_tok.pos_end,
-				f"Expected 'THEN'"
+				f"Expected 'TIMES'"
 			))
 
 		res.register_advancement()
@@ -598,10 +612,10 @@ class Parser:
 		condition = res.register(self.expr())
 		if res.error: return res
 
-		if not self.current_tok.matches(TT_KEYWORD, 'THEN'):
+		if not self.current_tok.matches(TT_KEYWORD, 'TIMES'):
 			return res.failure(InvalidSyntaxError(
 				self.current_tok.pos_start, self.current_tok.pos_end,
-				f"Expected 'THEN'"
+				f"Expected 'TIMES'"
 			))
 
 		res.register_advancement()
@@ -1023,15 +1037,16 @@ class Interpreter:
 			return res.success(else_value)
 
 		return res.success(None)
-	
+	def visit_int(self, node, context):
+		pass
 	def visit_ForNode(self, node, context):
 		res = RTResult()
 
-		start_value = res.register(self.visit(node.start_value_node, context))
-		if res.error: return res
-
+		#start_value = 0
+		start_value =  Number(0)
+		start_value.value =  Number(0)
 		end_value = res.register(self.visit(node.end_value_node, context))
-		if res.error: return res
+		if res.error: end_value = 1
 
 		if node.step_value_node:
 			step_value = res.register(self.visit(node.step_value_node, context))
@@ -1042,13 +1057,14 @@ class Interpreter:
 		i = start_value.value
 
 		if step_value.value >= 0:
-			condition = lambda: i < end_value.value
+			condition = lambda: int(str(i)) < int(str(end_value.value))
 		else:
 			condition = lambda: i > end_value.value
 		
 		while condition():
 			context.symbol_table.set(node.var_name_tok.value, Number(i))
-			i += step_value.value
+			i = int(str(i))
+			i += int(str(step_value.value))
 
 			res.register(self.visit(node.body_node, context))
 			if res.error: return res
