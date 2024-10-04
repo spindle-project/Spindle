@@ -3,7 +3,7 @@
 **This is the language used in the AP Computer Science Exam, except it's actually a programming language!**
 
 ## ✖️ Variables:
-Varibles can be assigned a value using "<--" or "<-"
+Varibles can be assigned a value using "<--" OR "<-"
 For example, the following code sets a to 10 and then to 13 (a's value plus 3). 
 ```
 a <- 10
@@ -41,15 +41,17 @@ b <-- c
 ## ❔ If Statements:
 If Statements can be defined with the keyword IF, and then the expression that must be true. The code that is to be ran when the the condition is met must be wrapred in brackets. If the condition for the IF statement is false, you can write an ELSE statement that will be ran instead
 ```
-a <--- 5
-IF a==5{
-1
-}
-ELSE {
-0
-}
+a <-- 5
+IF a==5{1}ELSE {0}
 ```
-
+## 🔄 For Loops
+For Loops are defined by the keyword REPEAT, followed by the number of times you want it to repeat, the keyword TIMES, and finally the code you want to be repeated
+```
+a <-- 5
+REPEAT 10 TIMES a <-- a + 1
+a
+```
+In the example above, a would now have the value of 15
 ## 📖 Resources
 
  <b>The AP Computer Science Exam Reference Sheet can be found here:  *https://apcentral.collegeboard.org/media/pdf/ap-computer-science-principles-exam-reference-sheet.pdf*</b>
