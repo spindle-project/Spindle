@@ -16,7 +16,14 @@ UPPERCASE_LETTERS = string.ascii_uppercase
 LETTERS = UPPERCASE_LETTERS + LOWERCASE_LETTERS
 LETTERS_DIGITS = LETTERS + DIGITS
 
-
+#######################################
+# Temp varibles
+#######################################
+REPEAT_STATEMENT_FIRST_CHAR = None
+IN_REPEAT_LOOP = False
+def CHANGE_IN_REPEAT_LOOP():
+	global IN_REPEAT_LOOP
+	IN_REPEAT_LOOP = not IN_REPEAT_LOOP
 #######################################
 # ERRORS
 #######################################
@@ -129,7 +136,7 @@ KEYWORDS = ['AND',
 	'IF',
 	'ELSE',
 	'TIMES',
-	'FOR',
+	'REPEAT',
 	'TO',
 	'STEP',
 	'WHILE'
@@ -180,23 +187,24 @@ class Lexer:
 			if self.current_char in ' \t':
 				self.advance()
 			elif self.current_char in DIGITS:
+				print(self.current_char)
 				tokens.append(self.make_number())
 				#varibles
 			elif self.current_char in LETTERS:
 				#TEST for For loop
-				if self.current_char == 'F':
-					self.advance()
-					if self.current_char == 'O':
+				if self.current_char == 'R':
+					for i in range(5):
 						self.advance()
-						if self.current_char == "R":
-							for i in range(3):
-								self.unadvance()
-							tokens.append(self.make_identifier("FOR_LOOP_BYPASS"))
-							if self.make_identifier("FOR_LOOP_IDENITIFER_BYPASS") != None:
-								tokens.append(self.make_identifier("FOR_LOOP_IDENITIFER_BYPASS"))
+					print(f'3 currentchar {self.current_char}') #REPEAT_STATEMENT_FIRST_CHAR
+					print(f'%%% {33} currentchar {self.current_char}') #REPEAT_STATEMENT_FIRST_CHAR
+					tokens.append(self.make_identifier("FOR_LOOP_BYPASS"))
+					print(f'%%% {33} currentchar {self.current_char}') #REPEAT_STATEMENT_FIRST_CHAR
+
+					if self.make_identifier("FOR_LOOP_IDENITIFER_BYPASS") != None:
+						tokens.append(self.make_identifier("FOR_LOOP_IDENITIFER_BYPASS"))
+						print(f'%%% {33} currentchar {self.current_char}') #REPEAT_STATEMENT_FIRST_CHAR
 
 				else: # No for loop here :( Undo our actions
-					#self.unadvance()
 				# Append the identifier token like normal
 					tokens.append(self.make_identifier())
 			elif self.current_char == '<':
@@ -264,22 +272,32 @@ class Lexer:
 
 	def make_number(self):
 		num_str = ''
+		if IN_REPEAT_LOOP == True:
+			print('in repeat loop')
+			num_str = '1'
+			CHANGE_IN_REPEAT_LOOP()
+		char_to_append = None
 		dot_count = 0
+		
+		
 		print(f'starting nu: {self.current_char}')
 		pos_start = self.pos.copy()
-		
+
 		while self.current_char != None and self.current_char in DIGITS + '.':
-			print(self.current_char)
 			if self.current_char == '.':
 				if dot_count == 1: break
 				dot_count += 1
 				num_str += '.'
 			else:
 				num_str += self.current_char
+			print(f'num_str so far: {num_str}')
 			self.advance()
 			print(f'next char: {self.current_char}')
+
 		if self.current_char != None and self.current_char in DIGITS + '.':
 			num_str += self.current_char
+			self.advance()
+		print(f'END num_str: {num_str}')
 		if dot_count == 0:
 			return Token(TT_INT, int(num_str), pos_start, self.pos)
 		else:
@@ -288,17 +306,22 @@ class Lexer:
 	def make_identifier(self, bypass = None):
 		pos_start = self.pos.copy()
 		if bypass == "FOR_LOOP_BYPASS":
-			#self.advance()
-			return Token(TT_KEYWORD, "FOR", pos_start, self.pos)
+			#self.unadvance()
+			CHANGE_IN_REPEAT_LOOP()
+			return Token(TT_KEYWORD, "REPEAT", pos_start, self.pos)
 		if bypass == "FOR_LOOP_IDENITIFER_BYPASS":
-			#self.advance()
-			return Token(TT_IDENTIFIER, "n", self.pos, self.pos)
+			print(f'3454345 {self.current_char}')
+			self.unadvance()
+			print(f'3454345 {self.current_char}')
+
+			return Token(TT_IDENTIFIER, "n", pos_start, self.pos)
 			#FOR_LOOP_IDENITIFER_BYPASS
 		id_str = ''
 		while self.current_char != None and self.current_char in LETTERS_DIGITS + '_':
 			id_str += self.current_char
 			self.advance()
 		print(f'making identifier: {id_str}' )
+		print(f'currentchar: {self.current_char}')
 		if id_str == "":
 			return None #stop the functon!
 		if id_str not in KEYWORDS:
@@ -546,10 +569,10 @@ class Parser:
 	def for_expr(self):
 		res = ParseResult()
 
-		if not self.current_tok.matches(TT_KEYWORD, 'FOR'):
+		if not self.current_tok.matches(TT_KEYWORD, 'REPEAT'):
 			return res.failure(InvalidSyntaxError(
 				self.current_tok.pos_start, self.current_tok.pos_end,
-				f"Expected 'FOR'"
+				f"Expected 'REPEAT'"
 			))
 
 		res.register_advancement()
@@ -570,18 +593,12 @@ class Parser:
 
 		start_value = 0
 		if res.error: return res
-
-		end_value = res.register(self.expr())
+		print("ergre")
+		a = res.register(self.expr())
+		print(a)
+		end_value = a
 		if res.error: return res
-
-		if self.current_tok.matches(TT_KEYWORD, 'STEP'):
-			res.register_advancement()
-			self.advance()
-
-			step_value = res.register(self.expr())
-			if res.error: return res
-		else:
-			step_value = None
+		step_value = None
 		print(self.current_tok)
 		if not self.current_tok.matches(TT_KEYWORD, 'TIMES'):
 			return res.failure(InvalidSyntaxError(
@@ -641,7 +658,7 @@ class Parser:
 					if res.error: return res
 					return res.success(if_expr)
 		
-		elif tok.matches(TT_KEYWORD, 'FOR'):
+		elif tok.matches(TT_KEYWORD, 'REPEAT'):
 			for_expr = res.register(self.for_expr())
 			if res.error: return res
 			return res.success(for_expr)
