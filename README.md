@@ -1,6 +1,6 @@
 # ✨ Sparkle: An Overview
 
-**This is the language used in the AP Computer Science Exam, except it's actually a programming language!**
+**The language used in the AP Computer Science Exam, now actually a programming language!**
 
 ## ✖️ Variables:
 Varibles can be assigned a value using "<--" OR "<-"
@@ -29,9 +29,9 @@ b <-- c
 </details>
 
 ## 💡 Logical Operators:
-NOT: Negates the condition
-AND: Returns TRUE if and only if BOTH conditions are TRUE
-OR: Returns TRUE if [i] at least one [/i] of the conditions are true
+NOT: Negates the condition <br> 
+AND: Returns TRUE if and only if BOTH conditions are TRUE <br>
+OR: Returns TRUE if <i> at least one </i> of the conditions are true <br>
 
 ## 🆚 Comparison Operators:
 <b>In this language: <br />
