@@ -27,6 +27,7 @@ b <-- c
 ```
   
 </details>
+
 ## 💡 Logical Operators:
 NOT: Negates the condition
 AND: Returns TRUE if and only if BOTH conditions are TRUE
