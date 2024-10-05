@@ -27,6 +27,10 @@ b <-- c
 ```
   
 </details>
+## 💡 Logical Operators:
+NOT: Negates the condition
+AND: Returns TRUE if and only if BOTH conditions are TRUE
+OR: Returns TRUE if [i] at least one [/i] of the conditions are true
 
 ## 🆚 Comparison Operators:
 <b>In this language: <br />
@@ -42,7 +46,7 @@ b <-- c
 If Statements can be defined with the keyword IF, and then the expression that must be true. The code that is to be ran when the the condition is met must be wrapred in brackets. If the condition for the IF statement is false, you can write an ELSE statement that will be ran instead
 ```
 a <-- 5
-IF a==5{1}ELSE {0}
+IF a==5 {1} ELSE {0}
 ```
 ## 🔄 For Loops
 For Loops are defined by the keyword REPEAT, followed by the number of times you want it to repeat, the keyword TIMES, and finally the code you want to be repeated
@@ -52,6 +56,15 @@ REPEAT 10 TIMES a <-- a + 1
 a
 ```
 In the example above, a would now have the value of 15
+## 🔁 While Loops
+While loops are defined by the keywords REPEAT UNTIL, then the condition [surrounded by ()], and then the code you want repeated [surrounded by {}]
+Like the code reads, the loop will run <i> until </i> the condition is true. You can think it as a while loop running while (NOT condition)
+```
+a <-- 10
+REPEAT UNTIL (a > 30) { a <-- a + 4}
+```
+In the example above, a would now have the value of 34
+
 ## 📖 Resources
 
  <b>The AP Computer Science Exam Reference Sheet can be found here:  *https://apcentral.collegeboard.org/media/pdf/ap-computer-science-principles-exam-reference-sheet.pdf*</b>
