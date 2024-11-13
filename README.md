@@ -66,6 +66,16 @@ REPEAT UNTIL (a > 30) { a <-- a + 4}
 ```
 In the example above, a would now have the value of 34
 
+## 🔁 Functions
+Functions are defined by the keyword 'PROCEDURE', then the function name and or arguments [surrounded by ()], and then the code you want in the function body [surrounded by {}]
+```
+some_function <-- 0
+PROCEDURE mystery(a) { a + 12}
+some_function <-- mystery
+some_function(12)
+```
+In the example above, line 4 would return 24
+
 ## 📖 Resources
 
  <b>The AP Computer Science Exam Reference Sheet can be found here:  *https://apcentral.collegeboard.org/media/pdf/ap-computer-science-principles-exam-reference-sheet.pdf*</b>
