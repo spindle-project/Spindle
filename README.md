@@ -1,6 +1,8 @@
-# ✨ Sparkle: An Overview
+#  Welcome to ✨ Sparkle ✨
 
-**The language used in the AP Computer Science Exam, now actually a programming language!**
+**The language used in the AP CSP Exam, now actually a programming language!**
+
+## **Programming Guide**
 
 ## ✖️ Variables:
 Varibles can be assigned a value using "<--" OR "<-"
@@ -53,7 +55,7 @@ IF a==5 {1} ELSE {0}
 For Loops are defined by the keyword REPEAT, followed by the number of times you want it to repeat, the keyword TIMES, and finally the code you want to be repeated
 ```
 a <-- 5
-REPEAT 10 TIMES a <-- a + 1
+REPEAT 10 TIMES {a <-- a + 1}
 a
 ```
 In the example above, a would now have the value of 15
