@@ -1,5 +1,5 @@
 #######################################
-# IMPORTS
+# IMPORTS 
 #######################################
 
 from strings_with_arrows import *
@@ -218,6 +218,18 @@ class Lexer:
 				else: # No  loop here :( Undo our actions
 				# Append the identifier token like normal
 					tokens.append(self.make_identifier())
+					if self.current_char == '[':
+						tokens.append(Token(TT_DIV, pos_start=self.pos))
+						self.advance()
+						while str(self.current_char) in DIGITS and not self.current_char == ']':
+							tokens.append(self.make_number())
+							#self.advance()
+						if self.current_char == ']':
+							self.advance()
+						else:
+							return [], ExpectedCharError( self.pos, self.pos, f"Expected ']' got {self.current_char}")
+
+						
 			elif self.current_char == '<':
 				self.advance()
 				if self.current_char == '-':
@@ -266,11 +278,23 @@ class Lexer:
 			elif self.current_char == ')':
 				tokens.append(Token(TT_RPAREN, pos_start=self.pos))
 				self.advance()
-			elif self.current_char == '[':
-				tokens.append(Token(TT_LSQUARE, pos_start=self.pos))
-				self.advance()
+
 			elif self.current_char == ']':
 				tokens.append(Token(TT_RSQUARE, pos_start=self.pos))
+				self.advance()
+				if self.current_char == '[':
+					tokens.append(Token(TT_DIV, pos_start=self.pos))
+					self.advance()
+					while str(self.current_char) in DIGITS and not self.current_char == ']':
+						tokens.append(self.make_number())
+						#self.advance()
+					if self.current_char == ']':
+						self.advance()
+					else:
+						return [], ExpectedCharError( self.pos, self.pos, f"Expected ']' got {self.current_char}")
+
+			elif self.current_char == '[':
+				tokens.append(Token(TT_LSQUARE, pos_start=self.pos))
 				self.advance()
 			elif self.current_char == '!':
 				tok, error = self.make_not_equals()
@@ -1321,7 +1345,7 @@ class List(Value):
     if isinstance(other, Number):
       new_list = self.copy()
       try:
-        new_list.elements.pop(other.value)
+        new_list.elements.pop(other.value-1)
         return new_list, None
       except:
         return None, RTError(
@@ -1343,7 +1367,7 @@ class List(Value):
   def dived_by(self, other):
     if isinstance(other, Number):
       try:
-        return self.elements[other.value], None
+        return self.elements[other.value-1], None
       except:
         return None, RTError(
           other.pos_start, other.pos_end,
