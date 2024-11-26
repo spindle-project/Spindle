@@ -136,6 +136,7 @@ TT_LSQUARE = 'LSQUARE'
 TT_RSQUARE = 'RSQUARE'
 TT_LBRACE = 'TT_LBRACE' # {
 TT_RBRACE = 'TT_RBRACE' # }
+TT_NEWLINE = 'NEWLINE'
 # prob not use
 TT_KEYWORD = 'KEYWORD'
 KEYWORDS = ['AND', 
@@ -149,6 +150,7 @@ KEYWORDS = ['AND',
 	'STEP',
 	'WHILE',
 	'PROCEDURE'
+	'END'
 	]
 class Token:
 	def __init__(self, type_, value=None, pos_start=None, pos_end=None):
@@ -194,6 +196,9 @@ class Lexer:
 		tokens = []
 		while self.current_char != None:
 			if self.current_char in ' \t':
+				self.advance()
+			elif self.current_char in";\n":
+				tokens.append(Token(TT_NEWLINE, pos_start=self.pos))
 				self.advance()
 			elif self.current_char in DIGITS:
 				tokens.append(self.make_number())
@@ -564,17 +569,24 @@ class ParseResult:
 	def __init__(self):
 		self.error = None
 		self.node = None
+		self.last_registered_advance_count = 0
 		self.advance_count = 0
+		self.to_reverse_count = 0
 
 	def register(self, res):
+		self.last_registered_advance_count = res.advance_count
 		self.advance_count += res.advance_count
-
 		if res.error: self.error = res.error
 		return res.node
 
 	def register_advancement(self):
 		self.advance_count += 1
 
+	def try_register(self, res):
+		if res.error:
+			self.to_reverse_count = res.advance_count
+			return None
+		return self.register(res)
 
 	def success(self, node):
 		self.node = node
@@ -595,17 +607,25 @@ class Parser:
 		self.tok_idx = -1
 		self.advance()
 
-	def advance(self, ):
+	def advance(self):
 		self.tok_idx += 1
-		if self.tok_idx < len(self.tokens):
-			self.current_tok = self.tokens[self.tok_idx]
+		self.update_current_tok()
 		return self.current_tok
+
+	def reverse(self, amount=1):
+		self.tok_idx -= amount
+		self.update_current_tok()
+		return self.current_tok
+
+	def update_current_tok(self):
+		if self.tok_idx >= 0 and self.tok_idx < len(self.tokens):
+			self.current_tok = self.tokens[self.tok_idx]
 	
 	def peek(self, amount):
 		return self.tokens[self.tok_idx+amount]
 
 	def parse(self):
-		res = self.expr()
+		res = self.statements()
 
 		
 		if not res.error and self.current_tok.type not in (TT_EOF, TT_IDENTIFIER,TT_EQ,TT_RBRACE):
@@ -615,49 +635,40 @@ class Parser:
 			))
 		return res
 	
-	def list_expr(self):
+	def statements(self):
 		res = ParseResult()
-		element_nodes = []
+		statements = []
 		pos_start = self.current_tok.pos_start.copy()
 
-		if self.current_tok.type != TT_LSQUARE:
-			return res.failure(InvalidSyntaxError(
-				self.current_tok.pos_start, self.current_tok.pos_end,
-				f"Expected '['"
-		))
-
-		res.register_advancement()
-		self.advance()
-
-		if self.current_tok.type == TT_RSQUARE:
+		while self.current_tok.type == TT_NEWLINE:
 			res.register_advancement()
 			self.advance()
-		else:
-			element_nodes.append(res.register(self.expr()))
-			if res.error:
-				return res.failure(InvalidSyntaxError(
-				self.current_tok.pos_start, self.current_tok.pos_end,
-				"Expected ']', 'VAR', 'IF', 'FOR', 'WHILE', 'FUN', int, float, identifier, '+', '-', '(', '[' or 'NOT'"
-				))
 
-			while self.current_tok.type == TT_COMMA:
+		statement = res.register(self.expr())
+		if res.error: return res
+		statements.append(statement)
+
+		more_statements = True
+
+		while True:
+			newline_count = 0
+			while self.current_tok.type == TT_NEWLINE:
 				res.register_advancement()
 				self.advance()
-
-				element_nodes.append(res.register(self.expr()))
-				if res.error: return res
-
-			if self.current_tok.type != TT_RSQUARE:
-				return res.failure(InvalidSyntaxError(
-				self.current_tok.pos_start, self.current_tok.pos_end,
-				f"Expected ',' or ']'"
-				))
-
-			res.register_advancement()
-			self.advance()
+				newline_count += 1
+			if newline_count == 0:
+				more_statements = False
+			
+			if not more_statements: break
+			statement = res.try_register(self.expr())
+			if not statement:
+				self.reverse(res.to_reverse_count)
+				more_statements = False
+				continue
+			statements.append(statement)
 
 		return res.success(ListNode(
-		element_nodes,
+		statements,
 		pos_start,
 		self.current_tok.pos_end.copy()
 		))
