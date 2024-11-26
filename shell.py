@@ -6,5 +6,5 @@ while True:
     if error: 
         print(error.as_string())
     else:
-        print("\n"+str(result)+"\n")
+        print("\n"+str(repr(result))+"\n")
  
