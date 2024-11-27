@@ -362,13 +362,14 @@ class Lexer:
 		while self.current_char != None and (self.current_char != '"' or escape_character):
 			if escape_character:
 				string += escape_characters.get(self.current_char, self.current_char)
+				escape_character = False # TESTING NEW PLACE. REVERT IF NEEDED
 			else:
 				if self.current_char == '\\':
 					escape_character = True
 				else:
 					string += self.current_char
 			self.advance()
-			escape_character = False
+			#escape_character = False : <-- Orgional place
 		
 		self.advance()
 		return Token(TT_STRING, string, pos_start, self.pos)
@@ -800,7 +801,7 @@ class Parser:
 		if self.current_tok.type != TT_IDENTIFIER:
 			return res.failure(InvalidSyntaxError(
 				self.current_tok.pos_start, self.current_tok.pos_end,
-				f"Expected identifier"
+				f"Expected identifier 122"
 			))
 
 		var_name = self.current_tok
@@ -1080,14 +1081,15 @@ class Parser:
 		))
 		return res.success(node)
 
+	
 	def func_def(self):
 		res = ParseResult()
 
-		if not self.current_tok.matches(TT_KEYWORD,"PROCEDURE"):
+		if not self.current_tok.matches(TT_KEYWORD, 'PROCEDURE'):
 			return res.failure(InvalidSyntaxError(
-			self.current_tok.pos_start, self.current_tok.pos_end,
-			"Expected 'PROCEDURE'"
-		))
+				self.current_tok.pos_start, self.current_tok.pos_end,
+				f"Expected 'PROCEDURE'"
+			))
 
 		res.register_advancement()
 		self.advance()
@@ -1098,101 +1100,96 @@ class Parser:
 			self.advance()
 			if self.current_tok.type != TT_LPAREN:
 				return res.failure(InvalidSyntaxError(
-					self.current_tok.pos_start, self.current_tok.pos_end,
-					f"Expected '('"
+				self.current_tok.pos_start, self.current_tok.pos_end,
+				f"Expected '('"
 				))
 		else:
 			var_name_tok = None
 			if self.current_tok.type != TT_LPAREN:
 				return res.failure(InvalidSyntaxError(
-					self.current_tok.pos_start, self.current_tok.pos_end,
-					f"Expected identifier or '('"
+				self.current_tok.pos_start, self.current_tok.pos_end,
+				f"Expected identifier or '('"
 				))
-			
+		
 		res.register_advancement()
 		self.advance()
 		arg_name_toks = []
+
 		if self.current_tok.type == TT_IDENTIFIER:
 			arg_name_toks.append(self.current_tok)
 			res.register_advancement()
 			self.advance()
-
-			while self.current_tok.type == TT_COMMA:
-				res.register_advancement()
-				self.advance()
-
-				if self.current_tok.type != TT_IDENTIFIER:
-					return res.failure(InvalidSyntaxError(
-						self.current_tok.pos_start, self.current_tok.pos_end,
-						f"Expected identifier"
-					))
-
-				arg_name_toks.append(self.current_tok)
-				res.register_advancement()
-				self.advance()
-
-			if self.current_tok.type != TT_RPAREN:
-				return res.failure(InvalidSyntaxError(
-					self.current_tok.pos_start, self.current_tok.pos_end,
-					f"Expected ',' or ')'"
-				))
-			
-		else: 
-			if self.current_tok.type != TT_RPAREN:
-				return res.failure(InvalidSyntaxError(
-					self.current_tok.pos_start, self.current_tok.pos_end,
-					f"Expected identifier or ')'"
-				))
-		res.register_advancement()
-		self.advance()
- #CHANGED ARROW TO LBRACE '{'. Remember to close it off with '}'
-		if self.current_tok.type != TT_LBRACE:
-			return res.failure(InvalidSyntaxError(
-				self.current_tok.pos_start, self.current_tok.pos_end,
-				" Expected '{'"
-			))
-		res.register_advancement()
-		self.advance()
-		if self.current_tok.type == TT_NEWLINE:
+		
+		while self.current_tok.type == TT_COMMA:
 			res.register_advancement()
 			self.advance()
-			body = res.register(self.statements())
-			if res.error: return res
-			#res.register_advancement()
-			#self.advance()
-			# Close off func with }
-			print("looking for closing char 1: " + str(self.current_tok))
-			if self.current_tok.type != TT_RBRACE:
+
+			if self.current_tok.type != TT_IDENTIFIER:
 				return res.failure(InvalidSyntaxError(
 					self.current_tok.pos_start, self.current_tok.pos_end,
-					"Expected '}'"
+					f"Expected identifier"
 				))
-			return res.success(FuncDefNode(
-			var_name_tok,
-			arg_name_toks,
-			body,
-      		True
+
+			arg_name_toks.append(self.current_tok)
+			res.register_advancement()
+			self.advance()
+		
+		if self.current_tok.type != TT_RPAREN:
+			return res.failure(InvalidSyntaxError(
+			self.current_tok.pos_start, self.current_tok.pos_end,
+			f"Expected ',' or ')'"
 			))
 		else:
-			body = res.register(self.expr())
-			if res.error: return res
-			#res.register_advancement()
-			##self.advance()
-			# Close off func with }
-			if self.current_tok.type != TT_RBRACE:
+			if self.current_tok.type != TT_RPAREN:
 				return res.failure(InvalidSyntaxError(
-					self.current_tok.pos_start, self.current_tok.pos_end,
-					"Expected '}'"
+				self.current_tok.pos_start, self.current_tok.pos_end,
+				f"Expected identifier or ')'"
 				))
+
+		res.register_advancement()
+		self.advance()
+
+		if self.current_tok.type == TT_LBRACE: #PROC a(b,c)***{*** --code-- }
+			res.register_advancement()
+			self.advance()
+
+			body = res.register(self.statements())
+			if res.error: return res
+
 			return res.success(FuncDefNode(
 				var_name_tok,
 				arg_name_toks,
 				body,
 				False
 			))
-
-
 		
+		if self.current_tok.type != TT_NEWLINE:
+			return res.failure(InvalidSyntaxError(
+				self.current_tok.pos_start, self.current_tok.pos_end,
+				f"Expected '->' or NEWLINE"
+			))
+
+		res.register_advancement()
+		self.advance()
+
+		body = res.register(self.statements())
+		if res.error: return res
+
+		'''if not self.current_tok.matches(TT_KEYWORD, 'END'):
+			return res.failure(InvalidSyntaxError(
+				self.current_tok.pos_start, self.current_tok.pos_end,
+				f"Expected 'END'"
+			))'''
+
+		res.register_advancement()
+		self.advance()
+		
+		return res.success(FuncDefNode(
+		var_name_tok,
+		arg_name_toks,
+		body,
+		True
+		))
 
 
 
