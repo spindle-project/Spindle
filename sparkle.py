@@ -864,7 +864,7 @@ class Parser:
 			res.register_advancement()
 			self.advance()
 
-		return res.success(ForNode(var_name, start_value, end_value, step_value, body))
+		return res.success(ForNode(var_name, start_value, end_value, step_value, body, False))
 
 	def while_expr(self):
 		res = ParseResult()
