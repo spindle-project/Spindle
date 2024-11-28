@@ -8,5 +8,5 @@ while True:
     if error: 
         print(error.as_string())
     else:
-        print("\n"+str(repr(result))+"\n")
+        print("\n"+str(repr(result)).replace("-1.010203040506071","")+"\n")
  

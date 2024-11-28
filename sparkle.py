@@ -217,7 +217,6 @@ class Lexer:
 						self.advance()
 						self.advance()
 						tokens.append(self.make_identifier("RUN FUNC BYPASS"))
-						print("current char::: " + str(self.current_char))
 						continue
 					for i in range(4):
 						self.advance()
@@ -669,7 +668,6 @@ class Parser:
 	def parse(self):
 		res = self.statements()
 
-		print(str(self.current_tok.type))
 		if not res.error and self.current_tok.type not in (TT_EOF, TT_KEYWORD, TT_IDENTIFIER,TT_EQ,TT_RBRACE):
 			return res.failure(InvalidSyntaxError(
 				self.current_tok.pos_start, self.current_tok.pos_end,
@@ -798,7 +796,6 @@ class Parser:
 			if res.error: return res
 			cases, else_case = all_cases
 		else:
-			print
 			else_case = res.register(self.if_expr_c())
 			if res.error: return res
 		
@@ -1570,7 +1567,7 @@ class Number(Value):
 	def __repr__(self):
 		return str(self.value)
 	
-Number.null = Number(0)
+Number.null = Number(-1.010203040506071) # Null constant - shell replaces with 'null'
 Number.false = Number(0)
 Number.true = Number(1)
 Number.math_PI = Number(math.pi)
@@ -1910,7 +1907,6 @@ class BuiltInFunction(BaseFunction):
 	execute_length.arg_names = ["list"]
 
 	def execute_run(self, exec_ctx):
-		print("executing run")
 		fn = exec_ctx.symbol_table.get("fn")
 
 		if not isinstance(fn, String):
@@ -2273,7 +2269,7 @@ def run(fn, text):
 	# Generate tokens
 	lexer = Lexer(fn, text)
 	tokens, error = lexer.make_tokens()
-	print(tokens)
+	#print(tokens)
 	if error: return None, error
 	
 	# Generate AST
