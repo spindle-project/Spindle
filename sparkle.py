@@ -244,6 +244,14 @@ class Lexer:
 						self.advance()
 						tokens.append(self.make_identifier("RUN FUNC BYPASS"))
 						continue
+					# RETURN MAKE WORK
+					elif self.current_char == 'E':
+						# We have a return statement
+						for i in range(5):
+							self.advance()
+						tokens.append(Token(TT_KEYWORD, "RETURN", self.pos, self.pos))
+						continue
+						
 					for i in range(4):
 						self.advance()
 					# TEST FOR WHILE LOOP
@@ -254,11 +262,13 @@ class Lexer:
 							self.advance()
 						tokens.append(self.make_identifier("WHILE_LOOP_BYPASS"))
 						tokens.append(Token(TT_KEYWORD, "NOT", self.pos, self.pos))
+						continue
 						
 					else:
 						tokens.append(self.make_identifier("FOR_LOOP_BYPASS"))
 						if self.make_identifier("FOR_LOOP_IDENITIFER_BYPASS") != None:
 							tokens.append(self.make_identifier("FOR_LOOP_IDENITIFER_BYPASS"))
+						continue	
 
 				else: # No  loop here :( Undo our actions
 				# Append the identifier token like normal
@@ -2295,7 +2305,7 @@ def run(fn, text):
 	# Generate tokens
 	lexer = Lexer(fn, text)
 	tokens, error = lexer.make_tokens()
-	#print(tokens)
+	print(tokens)
 	if error: return None, error
 	
 	# Generate AST
