@@ -77,6 +77,7 @@ some_function <-- mystery
 some_function(12)
 ```
 In the example above, line 4 would return 24
+* Note: Multiline functions currently act funky 
 
 ## 📖 Resources
 
