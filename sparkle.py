@@ -246,8 +246,14 @@ class Lexer:
 						continue
 					# RETURN MAKE WORK
 					elif self.current_char == 'E':
+						self.advance()
+						if self.current_char == 'P':
+							tokens.append(self.make_identifier("FOR LOOP BYPASS"))
+							for i in range(3):
+								self.advance()
+							continue
 						# We have a return statement
-						for i in range(5):
+						for i in range(4):
 							self.advance()
 						tokens.append(Token(TT_KEYWORD, "RETURN", self.pos, self.pos))
 						continue
@@ -430,7 +436,7 @@ class Lexer:
 		if bypass == "WHILE_LOOP_BYPASS":
 			return Token(TT_KEYWORD, "WHILE", pos_start, self.pos)
 
-		if bypass == "FOR_LOOP_BYPASS":
+		if bypass == "FOR_LOOP_BYPASS" or bypass == "FOR LOOP BYPASS":
 			#self.unadvance()
 			CHANGE_IN_REPEAT_LOOP()
 			return Token(TT_KEYWORD, "REPEAT", pos_start, self.pos)
@@ -2305,7 +2311,7 @@ def run(fn, text):
 	# Generate tokens
 	lexer = Lexer(fn, text)
 	tokens, error = lexer.make_tokens()
-	print(tokens)
+	#print(tokens)
 	if error: return None, error
 	
 	# Generate AST
@@ -2322,3 +2328,49 @@ def run(fn, text):
 	result = interpreter.visit(ast.node, context)
 
 	return result.value, result.error
+
+def generate_tokens(fn,text):
+	lexer = Lexer(fn, text)
+	tokens, error = lexer.make_tokens()
+	return tokens
+
+def get_file_text(file_name):
+	try:
+		with open(file_name, "r") as f:
+			script = f.read()
+			return script
+	except Exception as e:
+		return "Error"
+def execute_run(self, exec_ctx):
+		fn = exec_ctx.symbol_table.get("fn")
+
+		if not isinstance(fn, String):
+			return RTResult().failure(RTError(
+				self.pos_start, self.pos_end,
+				"Second argument must be string",
+				exec_ctx
+			))
+
+		fn = fn.value
+
+		try:
+			with open(fn, "r") as f:
+				script = f.read()
+		except Exception as e:
+			return RTResult().failure(RTError(
+				self.pos_start, self.pos_end,
+				f"Failed to load script \"{fn}\"\n" + str(e),
+				exec_ctx
+			))
+
+		_, error = run(fn, script)
+		
+		if error:
+			return RTResult().failure(RTError(
+				self.pos_start, self.pos_end,
+				f"Failed to finish executing script \"{fn}\"\n" +
+				error.as_string(),
+				exec_ctx
+			))
+
+		return RTResult().success(Number.null) 
