@@ -1,86 +1,70 @@
-#  Welcome to ✨ Sparkle ✨
+# ✨ Sparkle ✨: For Those Who Want a 5
 
-**The language used in the AP CSP Exam, now actually a programming language!**
+Sparkle is a new programming language designed specifically for those familiar with the AP Computer Science Principles (CSP) curriculum. It allows you to practice the actual code found in the exam as real, working code. 
 
-## **Programming Guide**
+**Why Sparkle?**
 
-## ✖️ Variables:
-Varibles can be assigned a value using "<--" OR "<-"
-For example, the following code sets a to 10 and then to 13 (a's value plus 3). 
-```
-a <- 10
-a <-- 13
-```
- Varibles can be assigned to other varibles!
-```
-b <-- a / 2
-```
-If you added this line to the lines above, it would set b to a's value divided by 2, resulting in 6.5
+* **Intuitive Syntax:** Sparkle utilizes keywords and operators that mirror those found in the AP CSP exam, making the transition from theory to practice seamless.
+* **Focus on Fundamentals:** Sparkle helps you solidify your understanding of core programming concepts like variables, conditional statements, loops, and functions.
+* **Interactive Learning:** Write code, experiment with the language, and debug in a safe and engaging environment.
 
-<details>
-  <summary>How would you swap the values of two variables? </summary>
-  
-  ```m
-a <-- 10
-b <-- 10
-c <--  a
-a <-- b
-b <-- c
-```
-  
-</details>
+## **Getting Started:**
 
-## 💡 Logical Operators:
-NOT: Negates the condition <br> 
-AND: Returns TRUE if and only if BOTH conditions are TRUE <br>
-OR: Returns TRUE if <i> at least one </i> of the conditions are true <br>
+Before you start sparkling your way to coding mastery, you'll need to download and set up Sparkle: 
 
-## 🆚 Comparison Operators:
-<b>In this language: <br />
-  0 is FALSE <br />
-  1 is TRUE </b>
+**1. Download Sparkle:**
 
-  The supported comparison operators are: 
-  1. < &nbsp;&nbsp;   &nbsp;&nbsp; 4. \>= 
-  2. <= &nbsp;&nbsp;  5. ==
-  3. \> &nbsp;&nbsp; &nbsp;&nbsp;  6. !=
+Head over to the releases section of the Sparkle GitHub repository and download the latest version of the `sparkle.py` and `shell.py` files: [You can find them here!](https://github.com/matthewl580/Sparkle)
+You'll also want to download Python [Which you can do here!](https://www.python.org/downloads/)
 
-## ❔ If Statements:
-If Statements can be defined with the keyword IF, and then the expression that must be true. The code that is to be ran when the the condition is met must be wrapred in brackets. If the condition for the IF statement is false, you can write an ELSE statement that will be ran instead
-```
-a <-- 5
-IF a==5 {1} ELSE {0}
-```
-## 🔄 For Loops
-For Loops are defined by the keyword REPEAT, followed by the number of times you want it to repeat, the keyword TIMES, and finally the code you want to be repeated
-```
-a <-- 5
-REPEAT 10 TIMES {a <-- a + 1}
-a
-```
-In the example above, a would now have the value of 15
-## 🔁 While Loops
-While loops are defined by the keywords REPEAT UNTIL, then the condition [surrounded by ()], and then the code you want repeated [surrounded by {}]
-Like the code reads, the loop will run <i> until </i> the condition is true. You can think it as a while loop running while (NOT condition)
-```
-a <-- 10
-REPEAT UNTIL (a > 30) { a <-- a + 4}
-```
-In the example above, a would now have the value of 34
+**2. Create a Project Folder:**
 
-## 🔁 Functions
-Functions are defined by the keyword 'PROCEDURE', then the function name and or arguments [surrounded by ()], and then the code you want in the function body [surrounded by {}]
+Create a new folder on your computer where you'll store your Sparkle code. Name it whatever you want.
+
+**3. Extract Sparkle Files:**
+
+Extract the downloaded  files into your project folder. You should have two files in it so far: `sparkle.py` and `shell.py`.
+
+**4. Write Your Sparkle Code:**
+
+Create a new text file within your project folder and save it with a filename ending in `.spkl` (e.g., `my_first_program.spkl`). This file will contain your Sparkle code.
+
+**Example Sparkle Code:**
+
+```sparkle
+# This program asks the user for their name and prints a greeting.
+
+name <-- input("What is your name? ")
+DISPLAY("Hello" + name + " !")
 ```
-some_function <-- 0
-PROCEDURE mystery(a) { a + 12}
-some_function <-- mystery
-some_function(12)
+
+**5. Run Your Code:**
+This can be done in two ways:
+- Simple Method
+1. Run the `shell.py` file
+2. Type `RUN("[FILENAME].spkl")`, replacing `[FILENAME]` with the actual filename of your Sparkle code file (e.g., `my_first_program.spkl`)
+
+- Advanced Method
+1. Open a terminal or command prompt
+2. Navigate to your project folder using the `cd` command.
+3. Run the below command, replacing `[FILENAME]` with the actual filename of your Sparkle code file (e.g., `my_first_program.spkl`):
+
 ```
-In the example above, line 4 would return 24
-* Note: Multiline functions currently act funky 
+python shell.py RUN("[FILENAME].spkl")
+```
 
-## 📖 Resources
+**Explanation:**
 
- <b>The AP Computer Science Exam Reference Sheet can be found here:  *https://apcentral.collegeboard.org/media/pdf/ap-computer-science-principles-exam-reference-sheet.pdf*</b>
+* `python shell.py`: This executes the `shell.py` script, which acts as a bridge between your Sparkle code and the Sparkle interpreter.
+* `RUN("[FILENAME].spkl")`: This tells the shell to run the Sparkle code contained within the specified file.
 
-<b> Writen with the help of a tutorial by CodePulse, which can be found here: *https://youtu.be/Eythq9848Fg?si=yDuSPkEzG2y1X1cm*</b>
+**Press Enter** and watch your Sparkle code come to life! The shell will display the output of your program.
+
+## **Additional Resources:**
+
+* Feel free to explore the Sparkle GitHub repository for more information: [link to Sparkle Github repository](https://github.com/matthewl580/Sparkle)
+* We recommend referring to the AP CSP reference sheet as a helpful guide: [link to AP CSP reference sheet](https://apcentral.collegeboard.org/media/pdf/ap-computer-science-principles-exam-reference-sheet.pdf)
+
+**Get Sparking!**
+
+Now that you've got the basics down, dive deeper into Sparkle and explore the world of programming with familiar concepts. Remember, practice makes perfect! Write code, experiment with different functionalities, and have fun learning! 
