@@ -777,8 +777,9 @@ class Parser:
 			res.register_advancement()
 			self.advance()
 			return res.success(BreakNode(pos_start, self.current_tok.pos_start.copy()))
-
+		
 		expr = res.register(self.expr())
+		print(f'expr: {expr}')
 		if res.error:
 			return res.failure(InvalidSyntaxError(
 				self.current_tok.pos_start, self.current_tok.pos_end,
@@ -807,23 +808,29 @@ class Parser:
 			self.advance()
 
 			if self.current_tok.type == TT_NEWLINE:
-				res.register_advancement()
-				self.advance()
-
+				while self.current_tok.type == TT_NEWLINE:
+					res.register_advancement()
+					self.advance()
 				statements = res.register(self.statements())
 				if res.error: return res
 				else_case = (statements, True)
 
-				if self.current_tok.matches(TT_KEYWORD, 'END'): #NOTE: Change
+				if self.current_tok == TT_RBRACE: #NOTE: Change
 					res.register_advancement()
 					self.advance()
 				else:
+					while self.current_tok.type == TT_NEWLINE:
+						res.register_advancement()
+						self.advance()
 					return res.failure(InvalidSyntaxError(
 						self.current_tok.pos_start, self.current_tok.pos_end,
-						"Expected 'END'"
+						"Expected '}'"
 					))
 			else:
-				expr = res.register(self.statement())
+				while self.current_tok.type == TT_NEWLINE:
+					res.register_advancement()
+					self.advance()
+				expr = res.register(self.statements())
 				if res.error: return res
 				else_case = (expr, False)
 
@@ -832,12 +839,17 @@ class Parser:
 	def if_expr_b_or_c(self):
 		res = ParseResult()
 		cases, else_case = [], None
-
+		while self.current_tok.type == TT_NEWLINE:
+					res.register_advancement()
+					self.advance()
 		if self.current_tok.matches(TT_KEYWORD, 'ELIF'):
 			all_cases = res.register(self.if_expr_b())
 			if res.error: return res
 			cases, else_case = all_cases
 		else:
+			while self.current_tok.type == TT_NEWLINE:
+					res.register_advancement()
+					self.advance()
 			else_case = res.register(self.if_expr_c())
 			if res.error: return res
 		
@@ -853,39 +865,51 @@ class Parser:
 				self.current_tok.pos_start, self.current_tok.pos_end,
 				f"Expected '{case_keyword}'"
 			))
-
 		res.register_advancement()
 		self.advance()
+		while self.current_tok.type == TT_NEWLINE:
+					res.register_advancement()
+					self.advance()
 
 		condition = res.register(self.expr())
 		if res.error: return res
-
+		while self.current_tok.type == TT_NEWLINE:
+					res.register_advancement()
+					self.advance()
 		if not self.current_tok.type == TT_LBRACE:
 			return res.failure(InvalidSyntaxError(
 				self.current_tok.pos_start, self.current_tok.pos_end,
-				f"Expected 'THEN'"
+				"Expected '{'"
 			))
-
 		res.register_advancement()
 		self.advance()
 
 		if self.current_tok.type == TT_NEWLINE:
-			res.register_advancement()
-			self.advance()
+			while self.current_tok.type == TT_NEWLINE:
+					res.register_advancement()
+					self.advance()
 
 			statements = res.register(self.statements())
 			if res.error: return res
 			cases.append((condition, statements, True))
-
-			if self.current_tok.matches(TT_KEYWORD, 'END'):
+			while self.current_tok.type == TT_NEWLINE:
+					res.register_advancement()
+					self.advance()
+			if self.current_tok.type == TT_RBRACE:
 				res.register_advancement()
 				self.advance()
 			else:
+				while self.current_tok.type == TT_NEWLINE:
+					res.register_advancement()
+					self.advance()
 				all_cases = res.register(self.if_expr_b_or_c())
 				if res.error: return res
 				new_cases, else_case = all_cases
 				cases.extend(new_cases)
 		else:
+			while self.current_tok.type == TT_NEWLINE:
+					res.register_advancement()
+					self.advance()
 			expr = res.register(self.statement())
 			if res.error: return res
 			cases.append((condition, expr, False))
@@ -2388,7 +2412,7 @@ def run_program(fn, text):
 	# Generate tokens
 	lexer = Lexer(fn, text)
 	tokens, error = lexer.make_tokens()
-	#print(tokens)
+	print(tokens)
 	if error: return None, error
 	
 	# Generate AST
