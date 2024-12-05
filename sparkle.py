@@ -709,8 +709,8 @@ class Parser:
 
 	def parse(self):
 		res = self.statements()
-
-		if not res.error and self.current_tok.type not in (TT_EOF, TT_KEYWORD, TT_IDENTIFIER,TT_EQ,TT_RBRACE):
+		print(f'Current  else error tok: {self.current_tok.type}')
+		if not res.error and self.current_tok.type not in (TT_EOF, TT_KEYWORD, TT_IDENTIFIER,TT_EQ,TT_LBRACE,TT_RBRACE):
 			return res.failure(InvalidSyntaxError(
 				self.current_tok.pos_start, self.current_tok.pos_end,
 				"Expected '+', '-', '*', '/', ,'[', '^', '==', '!=', '<', '>', <=', '>=', 'AND' or 'OR'"
@@ -803,10 +803,16 @@ class Parser:
 		else_case = None
 		res.register_advancement()
 		self.advance()
+		while self.current_tok.type == TT_NEWLINE:
+					res.register_advancement()
+					self.advance()
 		if self.current_tok.matches(TT_KEYWORD, 'ELSE'):
 			res.register_advancement()
 			self.advance()
-
+			print(f'EEEEEEE: {self.current_tok.type}')
+			if self.current_tok == TT_LBRACE: #NOTE: Change
+					res.register_advancement()
+					self.advance()
 			if self.current_tok.type == TT_NEWLINE:
 				while self.current_tok.type == TT_NEWLINE:
 					res.register_advancement()
@@ -814,14 +820,16 @@ class Parser:
 				statements = res.register(self.statements())
 				if res.error: return res
 				else_case = (statements, True)
-
+				while self.current_tok.type == TT_NEWLINE:
+					res.register_advancement()
+					self.advance()
 				if self.current_tok == TT_RBRACE: #NOTE: Change
 					res.register_advancement()
 					self.advance()
-				else:
 					while self.current_tok.type == TT_NEWLINE:
 						res.register_advancement()
 						self.advance()
+				else:
 					return res.failure(InvalidSyntaxError(
 						self.current_tok.pos_start, self.current_tok.pos_end,
 						"Expected '}'"
@@ -870,20 +878,23 @@ class Parser:
 		while self.current_tok.type == TT_NEWLINE:
 					res.register_advancement()
 					self.advance()
-
+		print(f'CONDITION EPECTED: {self.current_tok.type}' )
+		self.advance()
 		condition = res.register(self.expr())
 		if res.error: return res
+		res.register_advancement()
+		self.advance()
 		while self.current_tok.type == TT_NEWLINE:
 					res.register_advancement()
 					self.advance()
 		if not self.current_tok.type == TT_LBRACE:
 			return res.failure(InvalidSyntaxError(
 				self.current_tok.pos_start, self.current_tok.pos_end,
-				"Expected '{'"
+				f"Expected LBRACE: {self.current_tok.type}"
 			))
 		res.register_advancement()
 		self.advance()
-
+		
 		if self.current_tok.type == TT_NEWLINE:
 			while self.current_tok.type == TT_NEWLINE:
 					res.register_advancement()
@@ -898,6 +909,7 @@ class Parser:
 			if self.current_tok.type == TT_RBRACE:
 				res.register_advancement()
 				self.advance()
+				print("RBRACE FOUND")
 			else:
 				while self.current_tok.type == TT_NEWLINE:
 					res.register_advancement()
