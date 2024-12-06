@@ -14,6 +14,7 @@ while True:
     if text.strip() == "":
         continue
     result = sparkle.run('<stdin>', text)
-    print("\n"+str(repr(result)).replace("None","")+"\n")
-     
+    print("\n")
+    print(str(repr(result)).replace("None",""))
+    
     
