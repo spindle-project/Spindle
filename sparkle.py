@@ -709,8 +709,8 @@ class Parser:
 
 	def parse(self):
 		res = self.statements()
-		print(f'Current  else error tok: {self.current_tok.type}')
-		if not res.error and self.current_tok.type not in (TT_EOF, TT_KEYWORD, TT_IDENTIFIER,TT_EQ,TT_LBRACE,TT_RBRACE):
+
+		if not res.error and self.current_tok.type not in (TT_EOF, TT_KEYWORD, TT_IDENTIFIER,TT_EQ,TT_RBRACE):
 			return res.failure(InvalidSyntaxError(
 				self.current_tok.pos_start, self.current_tok.pos_end,
 				"Expected '+', '-', '*', '/', ,'[', '^', '==', '!=', '<', '>', <=', '>=', 'AND' or 'OR'"
@@ -777,9 +777,8 @@ class Parser:
 			res.register_advancement()
 			self.advance()
 			return res.success(BreakNode(pos_start, self.current_tok.pos_start.copy()))
-		
+		print(f"expecting expr got: {self.current_tok}")
 		expr = res.register(self.expr())
-		print(f'expr: {expr}')
 		if res.error:
 			return res.failure(InvalidSyntaxError(
 				self.current_tok.pos_start, self.current_tok.pos_end,
@@ -801,34 +800,35 @@ class Parser:
 	def if_expr_c(self):
 		res = ParseResult()
 		else_case = None
-		res.register_advancement()
-		self.advance()
-		while self.current_tok.type == TT_NEWLINE:
-					res.register_advancement()
-					self.advance()
+		print(f"running here? 3 {self.current_tok}")
 		if self.current_tok.matches(TT_KEYWORD, 'ELSE'):
+			print(f"Working? 1: {self.current_tok}")
 			res.register_advancement()
 			self.advance()
-			print(f'EEEEEEE: {self.current_tok.type}')
-			if self.current_tok == TT_LBRACE: #NOTE: Change
+			print(f"Working? 2: {self.current_tok}")
+
+			while self.current_tok.type == TT_NEWLINE:
+				res.register_advancement()
+				self.advance()
+			print(f"Working? 3: {self.current_tok}")
+			if self.current_tok.matches(TT_KEYWORD, TT_LBRACE): 
 					res.register_advancement()
 					self.advance()
+			print(f"Working? 4: {self.current_tok}")
 			if self.current_tok.type == TT_NEWLINE:
 				while self.current_tok.type == TT_NEWLINE:
 					res.register_advancement()
 					self.advance()
+				res.register_advancement()
+				self.advance()
+				print(f"Working? 5: {self.current_tok}")
 				statements = res.register(self.statements())
 				if res.error: return res
 				else_case = (statements, True)
-				while self.current_tok.type == TT_NEWLINE:
+				print(f"Working? 6: {self.current_tok}")
+				if self.current_tok.matches(TT_KEYWORD, TT_RBRACE): #NOTE: Change
 					res.register_advancement()
 					self.advance()
-				if self.current_tok == TT_RBRACE: #NOTE: Change
-					res.register_advancement()
-					self.advance()
-					while self.current_tok.type == TT_NEWLINE:
-						res.register_advancement()
-						self.advance()
 				else:
 					return res.failure(InvalidSyntaxError(
 						self.current_tok.pos_start, self.current_tok.pos_end,
@@ -838,7 +838,13 @@ class Parser:
 				while self.current_tok.type == TT_NEWLINE:
 					res.register_advancement()
 					self.advance()
-				expr = res.register(self.statements())
+				res.register_advancement()
+				self.advance()
+				while self.current_tok.type == TT_NEWLINE:
+					res.register_advancement()
+					self.advance()
+				print(f"error here, ecpecting statement got: {self.current_tok}")
+				expr = res.register(self.statement())
 				if res.error: return res
 				else_case = (expr, False)
 
@@ -847,17 +853,13 @@ class Parser:
 	def if_expr_b_or_c(self):
 		res = ParseResult()
 		cases, else_case = [], None
-		while self.current_tok.type == TT_NEWLINE:
-					res.register_advancement()
-					self.advance()
+
 		if self.current_tok.matches(TT_KEYWORD, 'ELIF'):
 			all_cases = res.register(self.if_expr_b())
 			if res.error: return res
 			cases, else_case = all_cases
 		else:
-			while self.current_tok.type == TT_NEWLINE:
-					res.register_advancement()
-					self.advance()
+			print(f"running here?  2 {self.current_tok.type}")
 			else_case = res.register(self.if_expr_c())
 			if res.error: return res
 		
@@ -867,61 +869,55 @@ class Parser:
 		res = ParseResult()
 		cases = []
 		else_case = None
-
+		print("running here?  1 {self.current_tok}")
 		if not self.current_tok.matches(TT_KEYWORD, case_keyword):
 			return res.failure(InvalidSyntaxError(
 				self.current_tok.pos_start, self.current_tok.pos_end,
 				f"Expected '{case_keyword}'"
 			))
+
 		res.register_advancement()
 		self.advance()
-		while self.current_tok.type == TT_NEWLINE:
-					res.register_advancement()
-					self.advance()
-		print(f'CONDITION EPECTED: {self.current_tok.type}' )
-		self.advance()
+
 		condition = res.register(self.expr())
 		if res.error: return res
-		res.register_advancement()
-		self.advance()
 		while self.current_tok.type == TT_NEWLINE:
 					res.register_advancement()
 					self.advance()
+		
 		if not self.current_tok.type == TT_LBRACE:
 			return res.failure(InvalidSyntaxError(
 				self.current_tok.pos_start, self.current_tok.pos_end,
-				f"Expected LBRACE: {self.current_tok.type}"
+				"Expected '}' got " + f"{self.current_tok}"
 			))
+
 		res.register_advancement()
 		self.advance()
-		
+
 		if self.current_tok.type == TT_NEWLINE:
-			while self.current_tok.type == TT_NEWLINE:
-					res.register_advancement()
-					self.advance()
+			res.register_advancement()
+			self.advance()
 
 			statements = res.register(self.statements())
 			if res.error: return res
 			cases.append((condition, statements, True))
-			while self.current_tok.type == TT_NEWLINE:
-					res.register_advancement()
-					self.advance()
+			print("running 5")
 			if self.current_tok.type == TT_RBRACE:
 				res.register_advancement()
 				self.advance()
-				print("RBRACE FOUND")
+				print("stuck?")
+				all_cases = res.register(self.if_expr_b_or_c())
+				if res.error: return res
+				new_cases, else_case = all_cases
+				cases.extend(new_cases)
 			else:
-				while self.current_tok.type == TT_NEWLINE:
-					res.register_advancement()
-					self.advance()
+				print("running here?  41 {self.current_tok}")
 				all_cases = res.register(self.if_expr_b_or_c())
 				if res.error: return res
 				new_cases, else_case = all_cases
 				cases.extend(new_cases)
 		else:
-			while self.current_tok.type == TT_NEWLINE:
-					res.register_advancement()
-					self.advance()
+			print("running here?  731 {self.current_tok}")
 			expr = res.register(self.statement())
 			if res.error: return res
 			cases.append((condition, expr, False))
@@ -1079,7 +1075,7 @@ class Parser:
 
 					arg_nodes.append(res.register(self.expr()))
 					if res.error: return res
-
+				print(f"expecting Rparen got {self.current_tok}")
 				if self.current_tok.type != TT_RPAREN:
 					return res.failure(InvalidSyntaxError(
 						self.current_tok.pos_start, self.current_tok.pos_end,
@@ -1326,7 +1322,6 @@ class Parser:
 			arg_name_toks.append(self.current_tok)
 			res.register_advancement()
 			self.advance()
-		
 		if self.current_tok.type != TT_RPAREN:
 			return res.failure(InvalidSyntaxError(
 			self.current_tok.pos_start, self.current_tok.pos_end,
