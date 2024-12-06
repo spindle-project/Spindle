@@ -777,7 +777,6 @@ class Parser:
 			res.register_advancement()
 			self.advance()
 			return res.success(BreakNode(pos_start, self.current_tok.pos_start.copy()))
-		print(f"expecting expr got: {self.current_tok}")
 		expr = res.register(self.expr())
 		if res.error:
 			return res.failure(InvalidSyntaxError(
@@ -800,32 +799,25 @@ class Parser:
 	def if_expr_c(self):
 		res = ParseResult()
 		else_case = None
-		print(f"running here? 3 {self.current_tok}")
 		if self.current_tok.matches(TT_KEYWORD, 'ELSE'):
-			print(f"Working? 1: {self.current_tok}")
 			res.register_advancement()
 			self.advance()
-			print(f"Working? 2: {self.current_tok}")
 
 			while self.current_tok.type == TT_NEWLINE:
 				res.register_advancement()
 				self.advance()
-			print(f"Working? 3: {self.current_tok}")
 			if self.current_tok.matches(TT_KEYWORD, TT_LBRACE): 
 					res.register_advancement()
 					self.advance()
-			print(f"Working? 4: {self.current_tok}")
 			if self.current_tok.type == TT_NEWLINE:
 				while self.current_tok.type == TT_NEWLINE:
 					res.register_advancement()
 					self.advance()
 				res.register_advancement()
 				self.advance()
-				print(f"Working? 5: {self.current_tok}")
 				statements = res.register(self.statements())
 				if res.error: return res
 				else_case = (statements, True)
-				print(f"Working? 6: {self.current_tok}")
 				if self.current_tok.matches(TT_KEYWORD, TT_RBRACE): #NOTE: Change
 					res.register_advancement()
 					self.advance()
@@ -843,7 +835,6 @@ class Parser:
 				while self.current_tok.type == TT_NEWLINE:
 					res.register_advancement()
 					self.advance()
-				print(f"error here, ecpecting statement got: {self.current_tok}")
 				expr = res.register(self.statement())
 				if res.error: return res
 				else_case = (expr, False)
@@ -859,7 +850,6 @@ class Parser:
 			if res.error: return res
 			cases, else_case = all_cases
 		else:
-			print(f"running here?  2 {self.current_tok.type}")
 			else_case = res.register(self.if_expr_c())
 			if res.error: return res
 		
@@ -869,7 +859,6 @@ class Parser:
 		res = ParseResult()
 		cases = []
 		else_case = None
-		print("running here?  1 {self.current_tok}")
 		if not self.current_tok.matches(TT_KEYWORD, case_keyword):
 			return res.failure(InvalidSyntaxError(
 				self.current_tok.pos_start, self.current_tok.pos_end,
@@ -901,23 +890,19 @@ class Parser:
 			statements = res.register(self.statements())
 			if res.error: return res
 			cases.append((condition, statements, True))
-			print("running 5")
 			if self.current_tok.type == TT_RBRACE:
 				res.register_advancement()
 				self.advance()
-				print("stuck?")
 				all_cases = res.register(self.if_expr_b_or_c())
 				if res.error: return res
 				new_cases, else_case = all_cases
 				cases.extend(new_cases)
 			else:
-				print("running here?  41 {self.current_tok}")
 				all_cases = res.register(self.if_expr_b_or_c())
 				if res.error: return res
 				new_cases, else_case = all_cases
 				cases.extend(new_cases)
 		else:
-			print("running here?  731 {self.current_tok}")
 			expr = res.register(self.statement())
 			if res.error: return res
 			cases.append((condition, expr, False))
@@ -1075,7 +1060,6 @@ class Parser:
 
 					arg_nodes.append(res.register(self.expr()))
 					if res.error: return res
-				print(f"expecting Rparen got {self.current_tok}")
 				if self.current_tok.type != TT_RPAREN:
 					return res.failure(InvalidSyntaxError(
 						self.current_tok.pos_start, self.current_tok.pos_end,
@@ -2397,9 +2381,9 @@ def run(fn, text):
 		result,error = run_program('<stdin>', text)
 		if error: 
 			print(error.as_string())
-		else:
+		else: 
 			if "<PROCEDURE" not in str(repr(result)):
-				print(str(repr(result)).replace("-1.010203040506071",""))
+				print(str(repr(result)).replace("-1.010203040506071","").replace("[]",""))
 
 	if proc_flag:
 		proc_flag = False
@@ -2412,14 +2396,14 @@ def run(fn, text):
 				break
 			else:
 				if "<PROCEDURE" not in str(repr(result)):
-					print(str(repr(result)).replace("-1.010203040506071",""))  
+					print(str(repr(result)).replace("-1.010203040506071","").replace("[]","")) 
 
 # Runs the program given to it by ththe
 def run_program(fn, text):
 	# Generate tokens
 	lexer = Lexer(fn, text)
 	tokens, error = lexer.make_tokens()
-	print(tokens)
+	#print(tokens)
 	if error: return None, error
 	
 	# Generate AST

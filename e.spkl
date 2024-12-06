@@ -9,3 +9,11 @@ PROCEDURE ADD(a,b) {
 }
 ADD(5,6)
 ADD(7,7)
+IF (10 == 10) {
+    DISPLAY("Equal!")
+   } ELSE {DISPLAY("nooo")}
+IF (3 == 10) { 
+   DISPLAY("Equal!")
+} ELSE {
+    DISPLAY("nooo")
+   }
