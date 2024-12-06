@@ -15,5 +15,5 @@ while True:
         continue
     result = sparkle.run('<stdin>', text)
     print("\n"+str(repr(result)).replace("None","")+"\n")
-    
+     
     
