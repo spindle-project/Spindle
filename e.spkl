@@ -1,0 +1,20 @@
+IF (NOT 6 + 6 == 12) {
+    DISPLAY("EQUAL 1 ") 
+    } 
+    ELSE { 
+        DISPLAY("NOT EQUAL 3") 
+    DISPLAY("NOT EQUAL 4") }
+
+
+
+IF (6 + 6 == 12) {
+     DISPLAY("EQUAL 5 ")
+    DISPLAY("EQUAL 5")
+} ELSE {3}
+
+IF ( 6 + 6 == 12) {
+     DISPLAY("EQUAL 55 ")
+    DISPLAY("EQUAL 55")
+}
+
+IF ( 1+1 == 2) {}

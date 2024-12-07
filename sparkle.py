@@ -717,6 +717,37 @@ class Parser:
 			))
 		return res
 	
+
+	def statement(self):
+		res = ParseResult()
+		pos_start = self.current_tok.pos_start.copy()
+
+		if self.current_tok.matches(TT_KEYWORD, 'RETURN'):
+			res.register_advancement()
+			self.advance()
+
+			expr = res.try_register(self.expr())
+			if not expr:
+				self.reverse(res.to_reverse_count)
+			return res.success(ReturnNode(expr, pos_start, self.current_tok.pos_start.copy()))
+			
+		if self.current_tok.matches(TT_KEYWORD, 'CONTINUE'):
+			res.register_advancement()
+			self.advance()
+			return res.success(ContinueNode(pos_start, self.current_tok.pos_start.copy()))
+		
+		if self.current_tok.matches(TT_KEYWORD, 'BREAK'):
+			res.register_advancement()
+			self.advance()
+			return res.success(BreakNode(pos_start, self.current_tok.pos_start.copy()))
+		expr = res.register(self.expr())
+		if res.error:
+			return res.failure(InvalidSyntaxError(
+				self.current_tok.pos_start, self.current_tok.pos_end,
+				"Expected 'RETURN', 'VAR', 'IF', 'FOR', 'WHILE', 'FUN', int, float, identifier, '+', '-', '(', '[' or 'NOT'"
+			))
+		return res.success(expr)
+	
 	def statements(self):
 		res = ParseResult()
 		statements = []
@@ -755,50 +786,23 @@ class Parser:
 		self.current_tok.pos_end.copy()
 		))
 
-	def statement(self):
-		res = ParseResult()
-		pos_start = self.current_tok.pos_start.copy()
-
-		if self.current_tok.matches(TT_KEYWORD, 'RETURN'):
-			res.register_advancement()
-			self.advance()
-
-			expr = res.try_register(self.expr())
-			if not expr:
-				self.reverse(res.to_reverse_count)
-			return res.success(ReturnNode(expr, pos_start, self.current_tok.pos_start.copy()))
-			
-		if self.current_tok.matches(TT_KEYWORD, 'CONTINUE'):
-			res.register_advancement()
-			self.advance()
-			return res.success(ContinueNode(pos_start, self.current_tok.pos_start.copy()))
-		
-		if self.current_tok.matches(TT_KEYWORD, 'BREAK'):
-			res.register_advancement()
-			self.advance()
-			return res.success(BreakNode(pos_start, self.current_tok.pos_start.copy()))
-		expr = res.register(self.expr())
-		if res.error:
-			return res.failure(InvalidSyntaxError(
-				self.current_tok.pos_start, self.current_tok.pos_end,
-				"Expected 'RETURN', 'VAR', 'IF', 'FOR', 'WHILE', 'FUN', int, float, identifier, '+', '-', '(', '[' or 'NOT'"
-			))
-		return res.success(expr)
+	
 
 
 	def if_expr(self):
+		print("aaa")
 		res = ParseResult()
 		all_cases = res.register(self.if_expr_cases('IF'))
 		if res.error: return res
 		cases, else_case = all_cases
 		return res.success(IfNode(cases, else_case))
-	
-	def if_expr_b(self):
-		return self.if_expr_cases('ELIF')
 
 	def if_expr_c(self):
 		res = ParseResult()
 		else_case = None
+		while self.current_tok.type == TT_NEWLINE:
+					res.register_advancement()
+					self.advance()
 		if self.current_tok.matches(TT_KEYWORD, 'ELSE'):
 			res.register_advancement()
 			self.advance()
@@ -806,7 +810,7 @@ class Parser:
 			while self.current_tok.type == TT_NEWLINE:
 				res.register_advancement()
 				self.advance()
-			if self.current_tok.matches(TT_KEYWORD, TT_LBRACE): 
+			if self.current_tok.type == TT_LBRACE: 
 					res.register_advancement()
 					self.advance()
 			if self.current_tok.type == TT_NEWLINE:
@@ -815,10 +819,15 @@ class Parser:
 					self.advance()
 				res.register_advancement()
 				self.advance()
+				print("hello?")
 				statements = res.register(self.statements())
 				if res.error: return res
 				else_case = (statements, True)
-				if self.current_tok.matches(TT_KEYWORD, TT_RBRACE): #NOTE: Change
+				while self.current_tok.type == TT_NEWLINE:
+					res.register_advancement()
+					self.advance()
+				print(f'if_expr_C current tok {self.current_tok}')
+				if self.current_tok.type ==  TT_RBRACE:
 					res.register_advancement()
 					self.advance()
 				else:
@@ -835,27 +844,35 @@ class Parser:
 				while self.current_tok.type == TT_NEWLINE:
 					res.register_advancement()
 					self.advance()
-				expr = res.register(self.statement())
-				if res.error: return res
+				print(f"cc {self.current_tok}")
+				expr = res.register(self.statements())
+				if res.error: 
+					return res
 				else_case = (expr, False)
+				res.register_advancement()
+				self.advance()
+				print(f"ffdd: {self.current_tok}")
+				if self.current_tok.type in ( TT_RBRACE): 
+					res.register_advancement()
+					self.advance()
+			return res.success(else_case)
 
-		return res.success(else_case)
+	
 
 	def if_expr_b_or_c(self):
 		res = ParseResult()
 		cases, else_case = [], None
-
-		if self.current_tok.matches(TT_KEYWORD, 'ELIF'):
-			all_cases = res.register(self.if_expr_b())
-			if res.error: return res
-			cases, else_case = all_cases
-		else:
+		while self.current_tok.type == TT_NEWLINE:
+					res.register_advancement()
+					self.advance()
+		if self.current_tok.matches(TT_KEYWORD, "ELSE"):
 			else_case = res.register(self.if_expr_c())
 			if res.error: return res
-		
 		return res.success((cases, else_case))
+	
 
 	def if_expr_cases(self, case_keyword):
+		print(f' {case_keyword} found!')
 		res = ParseResult()
 		cases = []
 		else_case = None
@@ -864,32 +881,40 @@ class Parser:
 				self.current_tok.pos_start, self.current_tok.pos_end,
 				f"Expected '{case_keyword}'"
 			))
-
 		res.register_advancement()
 		self.advance()
-
-		condition = res.register(self.expr())
+		if self.current_tok.type == TT_LPAREN:
+			res.register_advancement()
+			self.advance()
+		print(f"expecting condition got: {self.current_tok}")
+		condition = res.register(self.statement())
 		if res.error: return res
 		while self.current_tok.type == TT_NEWLINE:
 					res.register_advancement()
 					self.advance()
 		
-		if not self.current_tok.type == TT_LBRACE:
+		if not self.current_tok.type  == TT_RPAREN: #NOTE: in(TT_LBRACE , TT_RPAREN)
 			return res.failure(InvalidSyntaxError(
 				self.current_tok.pos_start, self.current_tok.pos_end,
 				"Expected '}' got " + f"{self.current_tok}"
 			))
-
 		res.register_advancement()
 		self.advance()
-
-		if self.current_tok.type == TT_NEWLINE:
+		print(f"kjiokj: {self.current_tok}")
+		if self.current_tok.type == TT_LBRACE:
 			res.register_advancement()
 			self.advance()
+		if self.current_tok.type == TT_NEWLINE:
+			while self.current_tok.type == TT_NEWLINE:
+				res.register_advancement()
+				self.advance()
 
 			statements = res.register(self.statements())
 			if res.error: return res
 			cases.append((condition, statements, True))
+			while self.current_tok.type == TT_NEWLINE:
+				res.register_advancement()
+				self.advance()
 			if self.current_tok.type == TT_RBRACE:
 				res.register_advancement()
 				self.advance()
@@ -900,12 +925,18 @@ class Parser:
 			else:
 				all_cases = res.register(self.if_expr_b_or_c())
 				if res.error: return res
+				while self.current_tok.type == TT_NEWLINE:
+					res.register_advancement()
+					self.advance()
+				if self.current_tok.type == TT_RBRACE:
+					res.register_advancement()
+					self.advance()
 				new_cases, else_case = all_cases
 				cases.extend(new_cases)
 		else:
-			expr = res.register(self.statement())
+			expr = res.register(self.statements())
 			if res.error: return res
-			cases.append((condition, expr, False))
+			cases.append((condition, expr, True))
 
 			all_cases = res.register(self.if_expr_b_or_c())
 			if res.error: return res
@@ -1036,6 +1067,10 @@ class Parser:
 	###################################
 	def call(self):
 		res = ParseResult()
+
+		print(f"wgthrw3esgthj: {self.current_tok}")
+		if self.current_tok.type == TT_RBRACE:
+			return res.success(Number.null)
 		atom = res.register(self.atom())
 		if res.error: return res
 		if self.current_tok.type == TT_LPAREN:
@@ -1086,6 +1121,7 @@ class Parser:
 			return res.success(StringNode(tok))
 		
 		elif tok.matches(TT_KEYWORD, 'IF'):
+					print("found if (parser)")
 					if_expr = res.register(self.if_expr())
 					if res.error: return res
 					return res.success(if_expr)
@@ -2066,6 +2102,10 @@ class Interpreter:
 		raise Exception(f'No visit_{type(node).__name__} method defined')
 
 	###################################
+	def visit_Number(self, node, context):
+		return RTResult().success(
+			Number(node.value).set_context(context).set_pos(node.pos_start, node.pos_end)
+		)
 
 	def visit_NumberNode(self, node, context):
 		return RTResult().success(
@@ -2176,6 +2216,7 @@ class Interpreter:
 			return res.success(number.set_pos(node.pos_start, node.pos_end))
 		
 	def visit_IfNode(self, node, context):
+		print("visitng if")
 		res = RTResult()
 		for condition, expr, should_return_null in node.cases:
 			condition_value = res.register(self.visit(condition, context))
@@ -2403,13 +2444,13 @@ def run_program(fn, text):
 	# Generate tokens
 	lexer = Lexer(fn, text)
 	tokens, error = lexer.make_tokens()
-	#print(tokens)
+	print(tokens)
 	if error: return None, error
 	
 	# Generate AST
 	parser = Parser(tokens)
 	ast = parser.parse()
-	#print(ast)
+	#print(str(ast))
 
 	if ast.error: return None, ast.error
 
