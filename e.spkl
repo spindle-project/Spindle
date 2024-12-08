@@ -1,18 +1,12 @@
-IF (NOT 6 + 6 == 12) {DISPLAY("EQUAL 1 ") 
-    } ELSE { DISPLAY("NOT EQUAL 3") 
-    DISPLAY("NOT EQUAL 4") 
+PROCEDURE IS_EVEN(num_one,num_two){
+REPEAT num_two TIMES {
+    IF (num_one/2 == 1) {
+        DISPLAY("yes")
+    } ELSE {
+        DISPLAY("no")
     }
-
-
-
-IF (6 + 6 == 12) {
-     DISPLAY("EQUAL 5 ")
-    DISPLAY("EQUAL 5")
-} ELSE {3}
-
-IF ( 6 + 6 == 12) {
-     DISPLAY("EQUAL 55 ")
-    DISPLAY("EQUAL 55")
+}
 }
 
-IF ( 1+1 == 2) {}
+IS_EVEN(2,3)
+IS_EVEN(1,2)
