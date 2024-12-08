@@ -810,15 +810,19 @@ class Parser:
 			while self.current_tok.type == TT_NEWLINE:
 				res.register_advancement()
 				self.advance()
+
 			if self.current_tok.type == TT_LBRACE: 
 					res.register_advancement()
 					self.advance()
+
 			if self.current_tok.type == TT_NEWLINE:
+				res.register_advancement()
+				self.advance()
+
 				while self.current_tok.type == TT_NEWLINE:
 					res.register_advancement()
 					self.advance()
-				res.register_advancement()
-				self.advance()
+					
 				print("hello?")
 				statements = res.register(self.statements())
 				if res.error: return res
@@ -1110,6 +1114,7 @@ class Parser:
 	def atom(self):
 		res = ParseResult()
 		tok = self.current_tok
+		print("current tok is: " + str(self.current_tok))
 		if tok.type in (TT_INT, TT_FLOAT):
 			res.register_advancement()
 			self.advance()

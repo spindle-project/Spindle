@@ -3,7 +3,8 @@ IF (NOT 6 + 6 == 12) {
     } 
     ELSE { 
         DISPLAY("NOT EQUAL 3") 
-    DISPLAY("NOT EQUAL 4") }
+    DISPLAY("NOT EQUAL 4") 
+    }
 
 
 
