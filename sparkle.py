@@ -430,7 +430,12 @@ class Lexer:
 	
 
 	def make_identifier(self, bypass = None):
-		pos_start = self.pos.copy()
+		try:
+			pos_start = self.pos.copy()
+		except:
+			pos_start = 0
+		if bypass == "ELSE BYPASS":
+			return Token(TT_KEYWORD, "ELSE", pos_start, self.pos)
 		if bypass == "RUN FUNC BYPASS":
 			return Token(TT_IDENTIFIER, "RUN", pos_start, self.pos)
 		if bypass == "WHILE_LOOP_BYPASS":
@@ -717,6 +722,37 @@ class Parser:
 			))
 		return res
 	
+
+	def statement(self):
+		res = ParseResult()
+		pos_start = self.current_tok.pos_start.copy()
+
+		if self.current_tok.matches(TT_KEYWORD, 'RETURN'):
+			res.register_advancement()
+			self.advance()
+
+			expr = res.try_register(self.expr())
+			if not expr:
+				self.reverse(res.to_reverse_count)
+			return res.success(ReturnNode(expr, pos_start, self.current_tok.pos_start.copy()))
+			
+		if self.current_tok.matches(TT_KEYWORD, 'CONTINUE'):
+			res.register_advancement()
+			self.advance()
+			return res.success(ContinueNode(pos_start, self.current_tok.pos_start.copy()))
+		
+		if self.current_tok.matches(TT_KEYWORD, 'BREAK'):
+			res.register_advancement()
+			self.advance()
+			return res.success(BreakNode(pos_start, self.current_tok.pos_start.copy()))
+		expr = res.register(self.expr())
+		if res.error:
+			return res.failure(InvalidSyntaxError(
+				self.current_tok.pos_start, self.current_tok.pos_end,
+				"Expected 'RETURN', 'VAR', 'IF', 'FOR', 'WHILE', 'FUN', int, float, identifier, '+', '-', '(', '[' or 'NOT'"
+			))
+		return res.success(expr)
+	
 	def statements(self):
 		res = ParseResult()
 		statements = []
@@ -755,35 +791,7 @@ class Parser:
 		self.current_tok.pos_end.copy()
 		))
 
-	def statement(self):
-		res = ParseResult()
-		pos_start = self.current_tok.pos_start.copy()
-
-		if self.current_tok.matches(TT_KEYWORD, 'RETURN'):
-			res.register_advancement()
-			self.advance()
-
-			expr = res.try_register(self.expr())
-			if not expr:
-				self.reverse(res.to_reverse_count)
-			return res.success(ReturnNode(expr, pos_start, self.current_tok.pos_start.copy()))
-			
-		if self.current_tok.matches(TT_KEYWORD, 'CONTINUE'):
-			res.register_advancement()
-			self.advance()
-			return res.success(ContinueNode(pos_start, self.current_tok.pos_start.copy()))
-		
-		if self.current_tok.matches(TT_KEYWORD, 'BREAK'):
-			res.register_advancement()
-			self.advance()
-			return res.success(BreakNode(pos_start, self.current_tok.pos_start.copy()))
-		expr = res.register(self.expr())
-		if res.error:
-			return res.failure(InvalidSyntaxError(
-				self.current_tok.pos_start, self.current_tok.pos_end,
-				"Expected 'RETURN', 'VAR', 'IF', 'FOR', 'WHILE', 'FUN', int, float, identifier, '+', '-', '(', '[' or 'NOT'"
-			))
-		return res.success(expr)
+	
 
 
 	def if_expr(self):
@@ -792,13 +800,13 @@ class Parser:
 		if res.error: return res
 		cases, else_case = all_cases
 		return res.success(IfNode(cases, else_case))
-	
-	def if_expr_b(self):
-		return self.if_expr_cases('ELIF')
 
 	def if_expr_c(self):
 		res = ParseResult()
 		else_case = None
+		while self.current_tok.type == TT_NEWLINE:
+					res.register_advancement()
+					self.advance()
 		if self.current_tok.matches(TT_KEYWORD, 'ELSE'):
 			res.register_advancement()
 			self.advance()
@@ -806,19 +814,26 @@ class Parser:
 			while self.current_tok.type == TT_NEWLINE:
 				res.register_advancement()
 				self.advance()
-			if self.current_tok.matches(TT_KEYWORD, TT_LBRACE): 
+
+			if self.current_tok.type == TT_LBRACE: 
 					res.register_advancement()
 					self.advance()
+
 			if self.current_tok.type == TT_NEWLINE:
+				res.register_advancement()
+				self.advance()
+
 				while self.current_tok.type == TT_NEWLINE:
 					res.register_advancement()
 					self.advance()
-				res.register_advancement()
-				self.advance()
+					
 				statements = res.register(self.statements())
 				if res.error: return res
 				else_case = (statements, True)
-				if self.current_tok.matches(TT_KEYWORD, TT_RBRACE): #NOTE: Change
+				while self.current_tok.type == TT_NEWLINE:
+					res.register_advancement()
+					self.advance()
+				if self.current_tok.type ==  TT_RBRACE:
 					res.register_advancement()
 					self.advance()
 				else:
@@ -835,25 +850,30 @@ class Parser:
 				while self.current_tok.type == TT_NEWLINE:
 					res.register_advancement()
 					self.advance()
-				expr = res.register(self.statement())
-				if res.error: return res
+				expr = res.register(self.statements())
+				if res.error: 
+					return res
 				else_case = (expr, False)
+				res.register_advancement()
+				self.advance()
+				if self.current_tok.type in ( TT_RBRACE): 
+					res.register_advancement()
+					self.advance()
+			return res.success(else_case)
 
-		return res.success(else_case)
+	
 
 	def if_expr_b_or_c(self):
 		res = ParseResult()
 		cases, else_case = [], None
-
-		if self.current_tok.matches(TT_KEYWORD, 'ELIF'):
-			all_cases = res.register(self.if_expr_b())
-			if res.error: return res
-			cases, else_case = all_cases
-		else:
+		while self.current_tok.type == TT_NEWLINE:
+					res.register_advancement()
+					self.advance()
+		if self.current_tok.matches(TT_KEYWORD, "ELSE"):
 			else_case = res.register(self.if_expr_c())
 			if res.error: return res
-		
 		return res.success((cases, else_case))
+	
 
 	def if_expr_cases(self, case_keyword):
 		res = ParseResult()
@@ -864,32 +884,38 @@ class Parser:
 				self.current_tok.pos_start, self.current_tok.pos_end,
 				f"Expected '{case_keyword}'"
 			))
-
 		res.register_advancement()
 		self.advance()
-
-		condition = res.register(self.expr())
+		if self.current_tok.type == TT_LPAREN:
+			res.register_advancement()
+			self.advance()
+		condition = res.register(self.statement())
 		if res.error: return res
 		while self.current_tok.type == TT_NEWLINE:
 					res.register_advancement()
 					self.advance()
 		
-		if not self.current_tok.type == TT_LBRACE:
+		if not self.current_tok.type  == TT_RPAREN: #NOTE: in(TT_LBRACE , TT_RPAREN)
 			return res.failure(InvalidSyntaxError(
 				self.current_tok.pos_start, self.current_tok.pos_end,
 				"Expected '}' got " + f"{self.current_tok}"
 			))
-
 		res.register_advancement()
 		self.advance()
-
-		if self.current_tok.type == TT_NEWLINE:
+		if self.current_tok.type == TT_LBRACE:
 			res.register_advancement()
 			self.advance()
+		if self.current_tok.type == TT_NEWLINE:
+			while self.current_tok.type == TT_NEWLINE:
+				res.register_advancement()
+				self.advance()
 
 			statements = res.register(self.statements())
 			if res.error: return res
 			cases.append((condition, statements, True))
+			while self.current_tok.type == TT_NEWLINE:
+				res.register_advancement()
+				self.advance()
 			if self.current_tok.type == TT_RBRACE:
 				res.register_advancement()
 				self.advance()
@@ -900,12 +926,18 @@ class Parser:
 			else:
 				all_cases = res.register(self.if_expr_b_or_c())
 				if res.error: return res
+				while self.current_tok.type == TT_NEWLINE:
+					res.register_advancement()
+					self.advance()
+				if self.current_tok.type == TT_RBRACE:
+					res.register_advancement()
+					self.advance()
 				new_cases, else_case = all_cases
 				cases.extend(new_cases)
 		else:
-			expr = res.register(self.statement())
+			expr = res.register(self.statements())
 			if res.error: return res
-			cases.append((condition, expr, False))
+			cases.append((condition, expr, True))
 
 			all_cases = res.register(self.if_expr_b_or_c())
 			if res.error: return res
@@ -1036,6 +1068,9 @@ class Parser:
 	###################################
 	def call(self):
 		res = ParseResult()
+
+		if self.current_tok.type == TT_RBRACE:
+			return res.success(Number.null)
 		atom = res.register(self.atom())
 		if res.error: return res
 		if self.current_tok.type == TT_LPAREN:
@@ -2066,6 +2101,10 @@ class Interpreter:
 		raise Exception(f'No visit_{type(node).__name__} method defined')
 
 	###################################
+	def visit_Number(self, node, context):
+		return RTResult().success(
+			Number(node.value).set_context(context).set_pos(node.pos_start, node.pos_end)
+		)
 
 	def visit_NumberNode(self, node, context):
 		return RTResult().success(
@@ -2323,22 +2362,26 @@ global_symbol_table.set("EXTEND", BuiltInFunction.extend)
 global_symbol_table.set("LENGTH", BuiltInFunction.length)
 global_symbol_table.set("RUN", BuiltInFunction.run)
 
-# This is a helper function. It takes in the string entered into the program and semi parses it.
-# Effectivly fixing the issue with PROCEDURE
-
+#######################################
+# SEMI PARSER
+# Generally, this is not apart of the actual Sparkle language runtime, but it serves to help it.
+# It also fixes many bugs in regards to inconsistances in the text. 
+# semi_parse_string(): This is a helper function. It takes in the string entered into the program and semi parses it. Effectivly fixing the issue with PROCEDURE
+#######################################
 def semi_parse_string(string):
-    """Divides the given string into a list of strings based on PROCEDURE keywords and curly brace nesting.
+    """Divides the given string into a list of strings based on PROCEDURE keywords and curly brace nesting, adding missing ELSE blocks to IF statements.
 
     Args:
         string: The input string to be divided.
 
     Returns:
-        A list of strings, where each string is a separate procedure or code block.
+        A list of strings, where each string is a separate procedure or code block with added ELSE blocks.
     """
 
     result = []
     current_block = []
     brace_depth = 0
+    in_if_block = False
 
     for line in string.splitlines():
         if line.startswith("PROCEDURE"):
@@ -2346,6 +2389,7 @@ def semi_parse_string(string):
                 result.append("".join(current_block))
             current_block = [line + " \n "]
             brace_depth = 0
+            in_if_block = False
         else:
             current_block.append(line + " \n ")
             if "{" in line:
@@ -2353,13 +2397,57 @@ def semi_parse_string(string):
             if "}" in line:
                 brace_depth -= line.count("}")
             if brace_depth == -1:
+                if in_if_block:
+                    # Add an empty ELSE block if the IF block doesn't have one
+                    current_block.append("ELSE {}\n")
                 result.append("".join(current_block))
                 current_block = []
+                in_if_block = False
+            elif line.strip().startswith("IF"):
+                in_if_block = True
+
     if current_block != []:
+        if in_if_block:
+            current_block.append("ELSE {}\n")
         result.append("".join(current_block))
 
-
     return result
+# This function addes an empty ELSE block to if statements that don't already have one. This is required for them to work correctly.
+def add_else_to_if(text):
+    found_if = False
+    return_text = ""
+    for i in range(len(text)):
+        char = text[i]
+        return_text += char
+        if char == " ":
+            continue
+        #looking for if
+        if char == "I" and text[i+1]=="F":
+            found_if = True
+        if char == "}" and found_if == True:
+            #look for an else
+            found_else = False
+            for j in range(len(text[i:])):
+                ochar = text[i+j]
+                if ochar == "E" and text[i+j+1] == "L" and text[i+j+2] == "S" and  text[i+j+3] == "E":
+                    found_else = True
+                    found_if = False
+                    break
+                if ochar =="{":
+                    return_text += """ ELSE{
+					}"""
+                    found_if = False
+
+    return return_text
+
+
+def text_to_tokens(text):
+	lexer = Lexer('SELF', text)
+	tokens, error = lexer.make_tokens()
+	if error: 
+		return error
+	else:
+		return tokens
 
 # This function handles RUN commands and calls the run_program for each semi parse generated by the semi_parse_string function
 def run(fn, text):
@@ -2371,45 +2459,50 @@ def run(fn, text):
     # Create tokens just for the sake of figuring out wheter we're dealing with a RUN command or a procedure
 	tokens = generate_tokens('<stdin>', text)
 	if str(tokens[0]) == "IDENTIFIER:RUN": # Test wheter the current script has a RUN FILE function
-		text = get_file_text(str(tokens[2]).split(":")[1])
+		text = str(get_file_text(str(tokens[2]).split(":")[1])).replace("{","{ \n")
+	else: 
+		text = text.replace("{","{ \n")
     # Test wheater or not code contains a function.
 	if "PROCEDURE" in text: # There's a procedure!!! Use sublists
 		proc_flag = True
 		program_text = semi_parse_string(text)
 	else :
-		program_text = text
-		result,error = run_program('<stdin>', text)
+		program_text = semi_parse_string(add_else_to_if(text))[0]
+		# Convert text to tokens for the else statement inserition
+		result,error = run_program('<stdin>', program_text)
 		if error: 
 			print(error.as_string())
 		else: 
 			if "<PROCEDURE" not in str(repr(result)):
-				print(str(repr(result)).replace("-1.010203040506071","").replace("[]",""))
+				print(str(repr(result)).replace("-1.010203040506071","").replace("[]","").replace("[, ]",""))
 
 	if proc_flag:
 		proc_flag = False
 		for i in range(len(program_text)): # Run each part of the text seperatly
 			if program_text[i].strip() == "":
 				continue
-			result,error = run_program('<stdin>', program_text[i])
+			result,error = run_program('<stdin>', add_else_to_if(program_text[i]))
 			if error: 
 				print(error.as_string())
 				break
 			else:
 				if "<PROCEDURE" not in str(repr(result)):
-					print(str(repr(result)).replace("-1.010203040506071","").replace("[]","")) 
+					print(str(repr(result)).replace("-1.010203040506071","").replace("[]","").replace("[, ]","")) 
 
 # Runs the program given to it by ththe
 def run_program(fn, text):
+	if not isinstance(text, list):
 	# Generate tokens
-	lexer = Lexer(fn, text)
-	tokens, error = lexer.make_tokens()
-	#print(tokens)
-	if error: return None, error
+		lexer = Lexer(fn, text)
+		tokens, error = lexer.make_tokens()
+		#print(tokens)
+		if error: return None, error
+	else:
+		tokens = text
 	
 	# Generate AST
 	parser = Parser(tokens)
 	ast = parser.parse()
-	#print(ast)
 
 	if ast.error: return None, ast.error
 
