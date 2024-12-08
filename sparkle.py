@@ -790,7 +790,6 @@ class Parser:
 
 
 	def if_expr(self):
-		print("aaa")
 		res = ParseResult()
 		all_cases = res.register(self.if_expr_cases('IF'))
 		if res.error: return res
@@ -823,14 +822,12 @@ class Parser:
 					res.register_advancement()
 					self.advance()
 					
-				print("hello?")
 				statements = res.register(self.statements())
 				if res.error: return res
 				else_case = (statements, True)
 				while self.current_tok.type == TT_NEWLINE:
 					res.register_advancement()
 					self.advance()
-				print(f'if_expr_C current tok {self.current_tok}')
 				if self.current_tok.type ==  TT_RBRACE:
 					res.register_advancement()
 					self.advance()
@@ -848,14 +845,12 @@ class Parser:
 				while self.current_tok.type == TT_NEWLINE:
 					res.register_advancement()
 					self.advance()
-				print(f"cc {self.current_tok}")
 				expr = res.register(self.statements())
 				if res.error: 
 					return res
 				else_case = (expr, False)
 				res.register_advancement()
 				self.advance()
-				print(f"ffdd: {self.current_tok}")
 				if self.current_tok.type in ( TT_RBRACE): 
 					res.register_advancement()
 					self.advance()
@@ -876,7 +871,6 @@ class Parser:
 	
 
 	def if_expr_cases(self, case_keyword):
-		print(f' {case_keyword} found!')
 		res = ParseResult()
 		cases = []
 		else_case = None
@@ -890,7 +884,6 @@ class Parser:
 		if self.current_tok.type == TT_LPAREN:
 			res.register_advancement()
 			self.advance()
-		print(f"expecting condition got: {self.current_tok}")
 		condition = res.register(self.statement())
 		if res.error: return res
 		while self.current_tok.type == TT_NEWLINE:
@@ -904,7 +897,6 @@ class Parser:
 			))
 		res.register_advancement()
 		self.advance()
-		print(f"kjiokj: {self.current_tok}")
 		if self.current_tok.type == TT_LBRACE:
 			res.register_advancement()
 			self.advance()
@@ -1072,7 +1064,6 @@ class Parser:
 	def call(self):
 		res = ParseResult()
 
-		print(f"wgthrw3esgthj: {self.current_tok}")
 		if self.current_tok.type == TT_RBRACE:
 			return res.success(Number.null)
 		atom = res.register(self.atom())
@@ -1114,7 +1105,6 @@ class Parser:
 	def atom(self):
 		res = ParseResult()
 		tok = self.current_tok
-		print("current tok is: " + str(self.current_tok))
 		if tok.type in (TT_INT, TT_FLOAT):
 			res.register_advancement()
 			self.advance()
@@ -1126,7 +1116,6 @@ class Parser:
 			return res.success(StringNode(tok))
 		
 		elif tok.matches(TT_KEYWORD, 'IF'):
-					print("found if (parser)")
 					if_expr = res.register(self.if_expr())
 					if res.error: return res
 					return res.success(if_expr)
@@ -2221,7 +2210,6 @@ class Interpreter:
 			return res.success(number.set_pos(node.pos_start, node.pos_end))
 		
 	def visit_IfNode(self, node, context):
-		print("visitng if")
 		res = RTResult()
 		for condition, expr, should_return_null in node.cases:
 			condition_value = res.register(self.visit(condition, context))
@@ -2369,9 +2357,12 @@ global_symbol_table.set("EXTEND", BuiltInFunction.extend)
 global_symbol_table.set("LENGTH", BuiltInFunction.length)
 global_symbol_table.set("RUN", BuiltInFunction.run)
 
-# This is a helper function. It takes in the string entered into the program and semi parses it.
-# Effectivly fixing the issue with PROCEDURE
-
+#######################################
+# SEMI PARSER
+# Generally, this is not apart of the actual Sparkle language runtime, but it serves to help it.
+# It also fixes many bugs in regards to inconsistances in the text. 
+# semi_parse_string(): This is a helper function. It takes in the string entered into the program and semi parses it. Effectivly fixing the issue with PROCEDURE
+#######################################
 def semi_parse_string(string):
     """Divides the given string into a list of strings based on PROCEDURE keywords and curly brace nesting.
 
@@ -2417,7 +2408,9 @@ def run(fn, text):
     # Create tokens just for the sake of figuring out wheter we're dealing with a RUN command or a procedure
 	tokens = generate_tokens('<stdin>', text)
 	if str(tokens[0]) == "IDENTIFIER:RUN": # Test wheter the current script has a RUN FILE function
-		text = get_file_text(str(tokens[2]).split(":")[1])
+		text = str(get_file_text(str(tokens[2]).split(":")[1])).replace("{","{ \n")
+	else: 
+		text = text.replace("{","{ \n")
     # Test wheater or not code contains a function.
 	if "PROCEDURE" in text: # There's a procedure!!! Use sublists
 		proc_flag = True
@@ -2449,13 +2442,12 @@ def run_program(fn, text):
 	# Generate tokens
 	lexer = Lexer(fn, text)
 	tokens, error = lexer.make_tokens()
-	print(tokens)
+	#print(tokens)
 	if error: return None, error
 	
 	# Generate AST
 	parser = Parser(tokens)
 	ast = parser.parse()
-	#print(str(ast))
 
 	if ast.error: return None, ast.error
 
