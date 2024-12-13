@@ -2364,7 +2364,7 @@ global_symbol_table.set("RUN", BuiltInFunction.run)
 
 #######################################
 # SEMI PARSER
-# Generally, this is not apart of the actual Sparkle language runtime, but it serves to help it.
+# Generally, this is not apart of the actual Spindle language runtime, but it serves to help it.
 # It also fixes many bugs in regards to inconsistances in the text. 
 # semi_parse_string(): This is a helper function. It takes in the string entered into the program and semi parses it. Effectivly fixing the issue with PROCEDURE
 #######################################
