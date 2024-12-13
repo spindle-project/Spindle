@@ -1,4 +1,4 @@
-# ✨ Sparkle ✨: For Those Who Want a 5
+# ✨ Spindle ✨: For Those Who Want a 5
 
 Sparkle is a new programming language designed specifically for those familiar with the AP Computer Science Principles (CSP) curriculum. It allows you to practice the actual code found in the exam as real, working code. 
 
