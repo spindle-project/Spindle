@@ -24,12 +24,7 @@ IF (USER_PASSCODE_ATTEMPT == PASSCODE) {
 	DISPLAY("Hello Spindle!")
     }
 	</code> </pre>
-<pre><code>
-# This program asks the user for their name and prints a greeting.
 
-name <-- input("What is your name? ")
-DISPLAY("Hello" + name + " !")
-    </code></pre>
  
 <h1>🔨 How To Use</h1> 
 <b>Spindle can be used natively on desktop, or for ease of use, anywhere via it's website</b>
