@@ -2433,7 +2433,7 @@ def add_else_to_if(text):
                     found_else = True
                     found_if = False
                     break
-                if ochar =="{":
+                if ochar =="}":
                     return_text += """ ELSE{
 					}"""
                     found_if = False
