@@ -17,12 +17,8 @@
 
 <h1>💻 Sample Code </h1>
 <pre> <code>
-# Displays "Hello Spindle!", but only if the user inputs an the super secret passcode
-PASSCODE <-- "SHHH"
-USER_PASSCODE_ATTEMPT <-- INPUT() 
-IF (USER_PASSCODE_ATTEMPT == PASSCODE) {
+# Displays "Hello Spindle!"
 	DISPLAY("Hello Spindle!")
-    }
 	</code> </pre>
 
  
