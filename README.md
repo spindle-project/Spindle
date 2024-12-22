@@ -19,7 +19,7 @@
 <pre> <code>
 # Displays "Hello Spindle!", but only if the user inputs an the super secret passcode
 PASSCODE <-- "SHHH"
-USER_PASSCODE_ATTEMPT = INPUT() 
+USER_PASSCODE_ATTEMPT <-- INPUT() 
 IF (USER_PASSCODE_ATTEMPT == PASSCODE) {
 	DISPLAY("Hello Spindle!")
     }
