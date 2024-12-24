@@ -1,5 +1,12 @@
 #######################################
 # IMPORTS 
+# Spindle relys on these libaires to function
+'''
+string - Gives a list of ascii leters. May be hard coded soon
+os - Assess port to the os, allows the RUN("") command to fetch the name of the file the devloper wants to run
+math - Gives us an accurate definition of pi, Will definity be hardcoded soon 
+'''
+# As stated above, the function of the string and math imports are planned to be hardcoded in - so that they can be removed
 #######################################
 
 import string
@@ -7,8 +14,40 @@ import os
 import math
 
 #######################################
-# This function provides fancy error arrows when an error happens
+# CONSTANTS
+# Put any values that you wish to stay the same globally here.
 #######################################
+
+DIGITS = '0123456789'
+LOWERCASE_LETTERS = string.ascii_lowercase
+UPPERCASE_LETTERS = string.ascii_uppercase
+LETTERS = UPPERCASE_LETTERS + LOWERCASE_LETTERS
+LETTERS_DIGITS = LETTERS + DIGITS
+
+#######################################
+# Temporary varbles
+# These varibles are not constants, but are global varibles Spindle needs to function
+# Repositioning these to the approciate scope should happen sooner rather than later,
+#######################################
+REPEAT_STATEMENT_FIRST_CHAR = None
+IN_REPEAT_LOOP = False
+def CHANGE_IN_REPEAT_LOOP():
+	global IN_REPEAT_LOOP
+	IN_REPEAT_LOOP = not IN_REPEAT_LOOP
+
+
+#######################################
+# ERRORS
+#######################################
+
+# This function provides fancy error arrows when an error happens
+''''
+Example:
+Runtime Error: 'karel' is not defined
+
+karel 
+^^^^
+'''
 def string_with_arrows(text, pos_start, pos_end):
     result = ''
 
@@ -36,35 +75,16 @@ def string_with_arrows(text, pos_start, pos_end):
 
     return result.replace('\t', '')
 
-#######################################
-# CONSTANTS
-#######################################
 
-DIGITS = '0123456789'
-LOWERCASE_LETTERS = string.ascii_lowercase
-UPPERCASE_LETTERS = string.ascii_uppercase
-LETTERS = UPPERCASE_LETTERS + LOWERCASE_LETTERS
-LETTERS_DIGITS = LETTERS + DIGITS
-
-#######################################
-# Temp varibles
-#######################################
-REPEAT_STATEMENT_FIRST_CHAR = None
-IN_REPEAT_LOOP = False
-def CHANGE_IN_REPEAT_LOOP():
-	global IN_REPEAT_LOOP
-	IN_REPEAT_LOOP = not IN_REPEAT_LOOP
-#######################################
-# ERRORS
-#######################################
-
+# This is the home of the Error class. When the programmer does something wrong, this will be called.
 class Error:
+    # Time to make a new error. 
 	def __init__(self, pos_start, pos_end, error_name, details):
 		self.pos_start = pos_start
 		self.pos_end = pos_end
 		self.error_name = error_name
 		self.details = details
-	
+	# How the error looks like as a string. This is what is displayed to the end programmer.
 	def as_string(self):
 		result = "\n[*** Error! ***] \n"
 		result += f' -- Summary:\n'
@@ -74,7 +94,13 @@ class Error:
 		result += '\n' + string_with_arrows(self.pos_start.ftxt, self.pos_start, self.pos_end)
         
 		return result
-
+# Types of Errors
+'''
+IllegalCharError: You have a chacter where it's not supposed to be
+ExpectedCharError: You are missing a chacter that needs to be there
+InvalidSyntaxError: IllegalCharError, but on a syntax level. Usually the easiest to fix. 
+RTError: The scarest error. Happens when Spindle physically cannot run the code, or if Spindle itself breaks
+'''
 class IllegalCharError(Error):
 	def __init__(self, pos_start, pos_end, details):
 		super().__init__(pos_start, pos_end, 'Illegal Character', details)
@@ -89,13 +115,15 @@ class RTError(Error):
 	def __init__(self, pos_start, pos_end, details, context):
 		super().__init__(pos_start, pos_end, 'Runtime Error', details)
 		self.context = context
-
+  
+  
+ # This type of error  overrides the default error as_string() method
 	def as_string(self):
 		result  = self.generate_traceback()
 		result += f'{self.error_name}: {self.details}'
 		result += '\n\n' + string_with_arrows(self.pos_start.ftxt, self.pos_start, self.pos_end)
 		return result
-
+ # Generate a nice looking traceback to help the programmer find the error
 	def generate_traceback(self):
 		result = ''
 		pos = self.pos_start
@@ -110,6 +138,8 @@ class RTError(Error):
 
 #######################################
 # POSITION
+# This keeps track of where in the string Spindle is when it is running it. 
+# Both at the text and token level. 
 #######################################
 
 class Position:
@@ -119,67 +149,83 @@ class Position:
 		self.col = col
 		self.fn = fn
 		self.ftxt = ftxt
-
+  
+# Move to the next chacter or token
 	def advance(self, current_char=None):
 		self.idx += 1
 		self.col += 1
 
-		if current_char == '\n':
+		if current_char == '\n': # handle newlines differnely 
 			self.ln += 1
 			self.col = 0
 
 		return self
-
+# Make a copy of Spindle's current position 
 	def copy(self):
 		return Position(self.idx, self.ln, self.col, self.fn, self.ftxt)
 
 #######################################
 # TOKENS
+# Text ran by Spindle is transformed into these before it is ran
 #######################################
 
-TT_INT			= 'INT'
-TT_FLOAT    = 'FLOAT'
-TT_STRING = 'STRING'
-TT_PLUS     = 'PLUS'
-TT_MINUS    = 'MINUS'
-TT_MUL      = 'MUL'
-TT_DIV      = 'DIV'
-TT_POW			= 'POW'
-TT_LPAREN   = 'LPAREN'
-TT_RPAREN   = 'RPAREN'
-TT_EOF			= 'EOF'
-TT_COMMA = 'COMMA'
-TT_IDENTIFIER = 'IDENTIFIER'
-TT_EQ = 'EQ'
-TT_EE = 'EE' #
-TT_NE = 'NE' #
-TT_LT = 'LT' #
-TT_GT = 'GT' #
-TT_LTE	= 'LTE' #
-TT_GTE	= 'GTE' #
-TT_EOF	= 'EOF'
-TT_LSQUARE = 'LSQUARE'
-TT_RSQUARE = 'RSQUARE'
-TT_LBRACE = 'TT_LBRACE' # {
-TT_RBRACE = 'TT_RBRACE' # }
-TT_NEWLINE = 'NEWLINE'
-# prob not use
-TT_KEYWORD = 'KEYWORD'
-KEYWORDS = ['AND', 
-	'OR', 
-	'NOT', 
-	'IF',
-	'ELSE',
-	'TIMES',
-	'REPEAT',
-	'TO',
-	'WHILE',
-	'PROCEDURE',
-	'RETURN',
-	'CONTINUE',
-	'BREAK'
+# DATA TYPES
+TT_INT			= 'INT' # Whole numbers like 3, 4 or 5
+TT_FLOAT    = 'FLOAT' # Numbers with a decimol point like: 3.14159
+TT_STRING = 'STRING' # Text. In Spindle strings are surrounded by ". Ex "Hello!"
+
+# EXPRESSSIONS
+TT_PLUS     = 'PLUS' # Plus sign (+)
+TT_MINUS    = 'MINUS' # Minus sign (-)
+TT_MUL      = 'MUL' # Multiplication sign (*)
+TT_DIV      = 'DIV' # Divison sign (/)
+TT_POW			= 'POW' # Power sign (**). LEGACY, will be removed soon 
+
+
+# COMPARASON OPERATORS
+TT_EE = 'EE' # Equals sign (==)
+TT_NE = 'NE' #  NOT Equals sign (!=)
+TT_LT = 'LT' # Less than sign (<)
+TT_GT = 'GT' # Greater than sign (>)
+TT_LTE	= 'LTE' # Less than or equal sing (<=)
+TT_GTE	= 'GTE' # Less than or equal sing (<=)
+
+# CHARACTER LEVEL SYNTAX 
+TT_LSQUARE = 'LSQUARE' # ([)
+TT_RSQUARE = 'RSQUARE' # (])
+TT_LBRACE = 'TT_LBRACE' # ({)
+TT_RBRACE = 'TT_RBRACE' # (})
+TT_LPAREN   = 'LPAREN' # Left Partenthesis "("
+TT_RPAREN   = 'RPAREN' # Right Partenthesis ")"
+TT_COMMA = 'COMMA' # Comma (,)
+TT_EQ = 'EQ' # Equals sign (<--) OR (<-), but only the two dash one is tested. 
+TT_NEWLINE = 'NEWLINE' # Newline (\n)
+
+
+# IMPORTANT
+TT_EOF			= 'EOF' # End of File. Automattically added to the end of the file. 
+TT_IDENTIFIER = 'IDENTIFIER' # Identifer, used to denote varibles
+TT_KEYWORD = 'KEYWORD' # Keyword, used to identifiy an important word in Spindle
+KEYWORDS = [
+    # COMPARASON. Imagine two values or expressions: a and b
+    'AND', # True if a and b are True
+	'OR', # True if either a is true or if b is true
+	'NOT', # If a is true, retuns false. And vice-versa
+	'IF', # IF statement
+	'ELSE', # ELSE statement. Must be appended to an if statement
+	'TIMES', # Used in a for loop
+	'REPEAT', # Used in both for and while loops
+	'TO', # LEGACY, has no use and will be removed soon
+	'WHILE', # LEGACY. Remove this. 
+	'PROCEDURE', # Used to denote functions
+	'RETURN', # Return a value from a function
+	'CONTINUE', # LEGACY - Maintainted, but only to be documented if collegeboard adds it
+	'BREAK' # LEGACY - Maintainted, but only to be documented if collegeboard adds it
 	]
+
+# The Token class
 class Token:
+    # Make a new token
 	def __init__(self, type_, value=None, pos_start=None, pos_end=None):
 		self.type = type_
 		self.value = value
@@ -191,16 +237,19 @@ class Token:
 
 		if pos_end:
 			self.pos_end = pos_end
-
+   
+	# Checks if a token has a specific value
 	def matches(self, type_,value):
 		return self.type == type_ and self.value == value
-	
+
+	# String repersentation of a token
 	def __repr__(self):
 		if self.value: return f'{self.type}:{self.value}'
 		return f'{self.type}'
 
 #######################################
 # LEXER
+# Makes tokens!
 #######################################
 
 class Lexer:
@@ -210,41 +259,46 @@ class Lexer:
 		self.pos = Position(-1, 0, -1, fn, text)
 		self.current_char = None
 		self.advance()
-	
+	# Advance to the next character
 	def advance(self):
 		self.pos.advance(self.current_char)
 		self.current_char = self.text[self.pos.idx] if self.pos.idx < len(self.text) else None
-
-	def unadvance(self):
-		self.pos.advance(self.current_char)
-		self.current_char = self.text[self.pos.idx-1] if self.pos.idx-1 >= 0 else None
-
+  
+	'''
+ Handles the token making process. Checks every character in a string of text and assigns tokens to them
+ 	''' 
 	def make_tokens(self):
-		tokens = []
+		tokens = [] # <-- List of tokens
 		while self.current_char != None:
 			if self.current_char in ' \t':
-				self.advance()
+				self.advance() # Igore
 			elif self.current_char == "#":
-				self.skip_comment()
-			elif self.current_char in";\n":
+				self.skip_comment() # This denotes a comment, ignore it and any letters after it until a newline
+			elif self.current_char in";\n": # For ternimal use only, ";" may represent a newline
 				tokens.append(Token(TT_NEWLINE, pos_start=self.pos))
 				self.advance()
-			elif self.current_char in DIGITS:
+			elif self.current_char in DIGITS: # Make a number!
 				tokens.append(self.make_number())
 				#varibles
-			elif self.current_char == '"' or self.current_char == ".":
+			elif self.current_char == '"' or self.current_char == ".": #Make a string!
 				tokens.append(self.make_string())
-			elif self.current_char in LETTERS:
+			# Strings must be surrounded by duouble quotes. 
+			# IF is not the same as "IF"
+			elif self.current_char in LETTERS: # serach for keywords. 
 				#TEST for For loop
-				if self.current_char == 'R': #NOTE: Make loops more precise
+				if self.current_char == 'R': #<-- Feature update, make looking for for loops more precise 
 					self.advance()
-					#Test for RUN Function
+					#Test for RUN command, by checking the second letter. 
+					'''
+					For loops: REPEAT x TIMES
+					RUN command: RUN("")
+     				'''
 					if self.current_char == 'U':
 						self.advance()
 						self.advance()
 						tokens.append(self.make_identifier("RUN FUNC BYPASS"))
 						continue
-					# RETURN MAKE WORK
+					# Now that we know we have "RE", we need to insure that we don't have a RETURN statement
 					elif self.current_char == 'E':
 						self.advance()
 						if self.current_char == 'P':
@@ -257,26 +311,31 @@ class Lexer:
 							self.advance()
 						tokens.append(Token(TT_KEYWORD, "RETURN", self.pos, self.pos))
 						continue
-						
+					# We don't have a RETURN statement, so advance past the rest of the letters
+					# We really should be checking all of them.
 					for i in range(4):
 						self.advance()
-					# TEST FOR WHILE LOOP
+					'''
+					Now we know we have "REPEAT", but both for and while loops start with this, so we have to check for a while loop
+					For loops: REPEAT x TIMES
+					While Loops: REPEAT UNTIL (expr)
+     				'''
 					self.advance()
 					self.advance()
-					if self.current_char == 'U': # while loops: REPEAT UNTIL
+					if self.current_char == 'U': # We have a while loop because the next character is a "U"
 						for i in range(6):
 							self.advance()
 						tokens.append(self.make_identifier("WHILE_LOOP_BYPASS"))
 						tokens.append(Token(TT_KEYWORD, "NOT", self.pos, self.pos))
 						continue
 						
-					else:
+					else: # We do not have a while loop so we must have a for loop
 						tokens.append(self.make_identifier("FOR_LOOP_BYPASS"))
 						if self.make_identifier("FOR_LOOP_IDENITIFER_BYPASS") != None:
 							tokens.append(self.make_identifier("FOR_LOOP_IDENITIFER_BYPASS"))
 						continue	
 
-				else: # No  loop here :( Undo our actions
+				else: # We do not have any loop or keyword. 
 				# Append the identifier token like normal
 					tokens.append(self.make_identifier())
 					if self.current_char == '[':
@@ -284,13 +343,12 @@ class Lexer:
 						self.advance()
 						while str(self.current_char) in DIGITS and not self.current_char == ']':
 							tokens.append(self.make_number())
-							#self.advance()
 						if self.current_char == ']':
 							self.advance()
 						else:
 							return [], ExpectedCharError( self.pos, self.pos, f"Expected ']' got {self.current_char}")
 
-						
+			# Check for comparason operators and operators			
 			elif self.current_char == '<':
 				self.advance()
 				if self.current_char == '-':
@@ -319,7 +377,7 @@ class Lexer:
 					tokens.append(self.make_equals())
 					self.advance()
 
-				else:
+				else: # Remember, (==) is different from (=). One exists and one does not. 
 					return [], ExpectedCharError( self.pos, self.pos, "Expected '==', not '='")
 			elif self.current_char == '-':
 				tokens.append(Token(TT_MINUS, pos_start=self.pos))
@@ -365,25 +423,28 @@ class Lexer:
 			elif self.current_char == ',':
 				tokens.append(Token(TT_COMMA, pos_start=self.pos))
 				self.advance()
-			else:
+			else: # We do not know what chacter this is!
 				pos_start = self.pos.copy()
 				char = self.current_char
 				self.advance()
 				return [], IllegalCharError(pos_start, self.pos, "'" + char + "'")
-
+		# Append the End of file token and make sure to remove any that are "None"
 		tokens.append(Token(TT_EOF, pos_start=self.pos))
 		tokens  = [i for i in tokens if i is not None]
 		return tokens, None
 
+# The process for making a number
 	def make_number(self):
 		num_str = ''
+		# This fixes for loops, please ignore the jankyness
 		if IN_REPEAT_LOOP == True:
 			num_str = '0'
 			CHANGE_IN_REPEAT_LOOP()
+		# Back to regular number making
 		char_to_append = None
 		dot_count = 0
 		pos_start = self.pos.copy()
-
+		# Add chacters to a number
 		while self.current_char != None and self.current_char in DIGITS + '.':
 			if self.current_char == '.':
 				if dot_count == 1: break
@@ -392,16 +453,17 @@ class Lexer:
 			else:
 				num_str += self.current_char
 			self.advance()
-
+		# Add the last digit
 		if self.current_char != None and self.current_char in DIGITS + '.':
 			num_str += self.current_char
 			self.advance()
+		# Return a INT or a FLOAT based on whether there's a "." or not
 		if dot_count == 0:
 			return Token(TT_INT, int(num_str), pos_start, self.pos)
 		else:
 			return Token(TT_FLOAT, float(num_str), pos_start, self.pos)
 		
-
+	# The process of making a string!
 	def make_string(self):
 		string = ""	
 		pos_start = self.pos.copy()
@@ -416,53 +478,49 @@ class Lexer:
 		while self.current_char != None and (self.current_char != '"' or escape_character):
 			if escape_character:
 				string += escape_characters.get(self.current_char, self.current_char)
-				escape_character = False # TESTING NEW PLACE. REVERT IF NEEDED
+				escape_character = False 
 			else:
 				if self.current_char == '\\':
 					escape_character = True
 				else:
 					string += self.current_char
-			self.advance()
-			#escape_character = False : <-- Orgional place
-		
+			self.advance()	
 		self.advance()
 		return Token(TT_STRING, string, pos_start, self.pos)
 	
+	# The process of making a identfier!
 
 	def make_identifier(self, bypass = None):
 		try:
 			pos_start = self.pos.copy()
 		except:
 			pos_start = 0
+		# Bypasses are used when we need to dynamically insert tokens into the token list
 		if bypass == "ELSE BYPASS":
 			return Token(TT_KEYWORD, "ELSE", pos_start, self.pos)
 		if bypass == "RUN FUNC BYPASS":
 			return Token(TT_IDENTIFIER, "RUN", pos_start, self.pos)
 		if bypass == "WHILE_LOOP_BYPASS":
 			return Token(TT_KEYWORD, "WHILE", pos_start, self.pos)
-
 		if bypass == "FOR_LOOP_BYPASS" or bypass == "FOR LOOP BYPASS":
-			#self.unadvance()
 			CHANGE_IN_REPEAT_LOOP()
 			return Token(TT_KEYWORD, "REPEAT", pos_start, self.pos)
 		if bypass == "FOR_LOOP_IDENITIFER_BYPASS":
-			##self.unadvance()
-
 			return Token(TT_IDENTIFIER, "n", pos_start, self.pos)
-			#FOR_LOOP_IDENITIFER_BYPASS
+		# With bypasses out of the way, the rest of this function makes identifiers
 		id_str = ''
 		while self.current_char != None and self.current_char in LETTERS_DIGITS + '_':
 			id_str += self.current_char
 			self.advance()
 
 		if id_str == "":
-			return None #stop the functon!
-		if id_str not in KEYWORDS:
+			return None #stop the functon! There are no letters to make an identifier with
+		if id_str not in KEYWORDS: # Not in keywords so it must be a function or varible
 			return Token(TT_IDENTIFIER, id_str, pos_start, self.pos)
-		else:
+		else: # Is a keyword
 			return Token(TT_KEYWORD, id_str, pos_start, self.pos)
 
-
+# Differientciate "==" from "!="
 	def make_not_equals(self):
 		pos_start = self.pos.copy()
 		self.advance()
@@ -473,11 +531,11 @@ class Lexer:
 
 		self.advance()
 		return None, ExpectedCharError(pos_start, self.pos, "Expected '!=' not just '!'")
-	
+	# Make a "=="
 	def make_equals(self):
 		pos_start = self.pos.copy()
 		return Token(TT_EE,pos_start = pos_start, pos_end = self.pos)
-		
+	# Make a "<"
 	def make_less_than(self):
 		tok_type = TT_LT
 		pos_start = self.pos.copy()
@@ -487,7 +545,7 @@ class Lexer:
 			tok_type = TT_LTE
 
 		return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
-
+# Make a ">"
 	def make_greater_than(self):
 		tok_type = TT_GT
 		pos_start = self.pos.copy()
@@ -497,7 +555,7 @@ class Lexer:
 			tok_type = TT_GTE
 
 		return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
-	
+	# Skip the "#" and all letters up to a new line chacter. This skips comments.
 	def skip_comment(self):
 		self.advance()
 
@@ -507,9 +565,10 @@ class Lexer:
 		self.advance()
 #######################################
 # NODES
+# The actual datatypes in Spindle, you should never have to touch this. 
 #######################################
 
-class NumberNode:
+class NumberNode: # Handles numbers, and their repersentations
 	def __init__(self, tok):
 		self.tok = tok
 
@@ -520,7 +579,7 @@ class NumberNode:
 		return f'{self.tok}'
 	
 
-class StringNode:
+class StringNode: # Handles strings, and their repersentations
 	def __init__(self, tok):
 		self.tok = tok
 
@@ -530,20 +589,20 @@ class StringNode:
 	def __repr__(self):
 		return f'{self.tok}'
 	
-class ListNode:
+class ListNode: # Handles lists (arrays), and their repersentations
   def __init__(self, element_nodes, pos_start, pos_end):
     self.element_nodes = element_nodes
 
     self.pos_start = pos_start
     self.pos_end = pos_end
 
-class VarAccessNode:
+class VarAccessNode: # Allows Spindle to assess the value of a varible
 	def __init__(self, var_name_tok):
 		self.var_name_tok = var_name_tok
 		self.pos_start = self.var_name_tok.pos_start
 		self.pos_end = self.var_name_tok.pos_end
 
-class VarAssignNode:
+class VarAssignNode: # Allows Spindle to set the value of a varible
 	def __init__(self, var_name_tok, value_node ):
 		self.var_name_tok = var_name_tok
 		self.value_node = value_node
@@ -551,7 +610,7 @@ class VarAssignNode:
 		self.pos_start = self.var_name_tok.pos_start
 		self.pos_end = self.value_node.pos_end
 
-class BinOpNode:
+class BinOpNode: # Binary Operation node. DO NOT TOUCH!
 	def __init__(self, left_node, op_tok, right_node):
 		self.left_node = left_node
 		self.op_tok = op_tok
@@ -563,7 +622,7 @@ class BinOpNode:
 	def __repr__(self):
 		return f'({self.left_node}, {self.op_tok}, {self.right_node})'
 
-class UnaryOpNode:
+class UnaryOpNode: # Unary Operation Node, most notibily used in the !=
 	def __init__(self, op_tok, node):
 		self.op_tok = op_tok
 		self.node = node
@@ -574,7 +633,7 @@ class UnaryOpNode:
 	def __repr__(self):
 		return f'({self.op_tok}, {self.node})'
 	
-class IfNode:
+class IfNode: # If statements and Else cases
 	def __init__(self, cases, else_case):
 		self.cases = cases
 		self.else_case = else_case
@@ -582,7 +641,7 @@ class IfNode:
 		self.pos_start = self.cases[0][0].pos_start
 		self.pos_end = (self.else_case or self.cases[len(self.cases) - 1])[0].pos_end
 
-class ForNode:
+class ForNode: # For loops in Spindle
 	def __init__(self, var_name_tok, start_value_node, end_value_node, step_value_node, body_node, should_return_null):
 		self.var_name_tok = var_name_tok
 		self.start_value_node = start_value_node
@@ -594,7 +653,7 @@ class ForNode:
 		self.pos_start = self.var_name_tok.pos_start
 		self.pos_end = self.body_node.pos_end
 
-class WhileNode:
+class WhileNode: # While loops in Spindle
 	def __init__(self, condition_node, body_node,should_return_null):
 		self.condition_node = condition_node
 		self.body_node = body_node
@@ -603,7 +662,7 @@ class WhileNode:
 		self.pos_start = self.condition_node.pos_start
 		self.pos_end = self.body_node.pos_end
 
-class FuncDefNode:
+class FuncDefNode: # Defining functions in Spindle
 	def __init__(self, var_name_tok, arg_name_toks, body_node,should_auto_return):
 		self.var_name_tok = var_name_tok
 		self.arg_name_toks =  arg_name_toks
@@ -619,7 +678,7 @@ class FuncDefNode:
 			
 		self.pos_end = self.body_node.pos_end
 
-class CallNode:
+class CallNode: # Calling functions in Spindle
 	def __init__(self, node_to_call, arg_nodes):
 		self.node_to_call = node_to_call
 		self.arg_nodes = arg_nodes
@@ -631,19 +690,20 @@ class CallNode:
 		else:
 			self.pos_end = self.node_to_call.pos_end
 
-class ReturnNode:
+class ReturnNode: # Retuning a value from a function in Spindle
 	def __init__(self, node_to_return, pos_start, pos_end):
 		self.node_to_return = node_to_return
 
 		self.pos_start = pos_start
 		self.pos_end = pos_end
 
-class ContinueNode:
+# LEGACY - Maintained as collegeboard may add these
+class ContinueNode: # Breaks out of that itteration of the loop
 	def __init__(self, pos_start, pos_end):
 		self.pos_start = pos_start
 		self.pos_end = pos_end
 
-class BreakNode:
+class BreakNode: # Breaks out of the loop
 	def __init__(self, pos_start, pos_end):
 		self.pos_start = pos_start
 		self.pos_end = pos_end
@@ -651,6 +711,7 @@ class BreakNode:
 
 #######################################
 # PARSE RESULT
+# The result of Parsing!
 #######################################
 
 class ParseResult:
@@ -676,17 +737,18 @@ class ParseResult:
 			return None
 		return self.register(res)
 
-	def success(self, node):
+	def success(self, node): # Everything works!
 		self.node = node
 		return self
 
-	def failure(self, error):
+	def failure(self, error): # There was an error somewhere :(
 		if not self.error or self.advance_count == 0:
 			self.error = error
 		return self
 
 #######################################
 # PARSER
+# This is where the syntax for Spindle is defined. 
 #######################################
 
 class Parser:
@@ -695,26 +757,26 @@ class Parser:
 		self.tok_idx = -1
 		self.advance()
 
-	def advance(self):
+	def advance(self): # Advance to the next token
 		self.tok_idx += 1
 		self.update_current_tok()
 		return self.current_tok
 
-	def reverse(self, amount=1):
+	def reverse(self, amount=1): # Go back to the last token
 		self.tok_idx -= amount
 		self.update_current_tok()
 		return self.current_tok
 
-	def update_current_tok(self):
+	def update_current_tok(self): # Update the current Token
 		if self.tok_idx >= 0 and self.tok_idx < len(self.tokens):
 			self.current_tok = self.tokens[self.tok_idx]
 	
-	def peek(self, amount):
+	def peek(self, amount): # Take a little look at the token *amount* away
 		return self.tokens[self.tok_idx+amount]
 
-	def parse(self):
+	def parse(self): # Time to figure out that the tokens mean
 		res = self.statements()
-
+		# Ignore TT_EOF, TT_KEYWORD, TT_IDENTIFIER,TT_EQ,TT_RBRACE. These should not cause errors. Everything else should though!
 		if not res.error and self.current_tok.type not in (TT_EOF, TT_KEYWORD, TT_IDENTIFIER,TT_EQ,TT_RBRACE):
 			return res.failure(InvalidSyntaxError(
 				self.current_tok.pos_start, self.current_tok.pos_end,
@@ -722,7 +784,7 @@ class Parser:
 			))
 		return res
 	
-
+# A statement is an expression
 	def statement(self):
 		res = ParseResult()
 		pos_start = self.current_tok.pos_start.copy()
@@ -752,7 +814,7 @@ class Parser:
 				"Expected 'RETURN', 'VAR', 'IF', 'FOR', 'WHILE', 'FUN', int, float, identifier, '+', '-', '(', '[' or 'NOT'"
 			))
 		return res.success(expr)
-	
+	# Statements is more than one statement
 	def statements(self):
 		res = ParseResult()
 		statements = []
@@ -794,14 +856,14 @@ class Parser:
 	
 
 
-	def if_expr(self):
+	def if_expr(self): # Creates an if node
 		res = ParseResult()
 		all_cases = res.register(self.if_expr_cases('IF'))
 		if res.error: return res
 		cases, else_case = all_cases
 		return res.success(IfNode(cases, else_case))
 
-	def if_expr_c(self):
+	def if_expr_c(self): # Handles "ELSE" cases
 		res = ParseResult()
 		else_case = None
 		while self.current_tok.type == TT_NEWLINE:
@@ -863,7 +925,7 @@ class Parser:
 
 	
 
-	def if_expr_b_or_c(self):
+	def if_expr_b_or_c(self): # Figures out whether to handle this as an IF or ELSE case
 		res = ParseResult()
 		cases, else_case = [], None
 		while self.current_tok.type == TT_NEWLINE:
@@ -875,7 +937,7 @@ class Parser:
 		return res.success((cases, else_case))
 	
 
-	def if_expr_cases(self, case_keyword):
+	def if_expr_cases(self, case_keyword): # Handle the code inside IF and ELSE statements
 		res = ParseResult()
 		cases = []
 		else_case = None
@@ -945,7 +1007,8 @@ class Parser:
 			cases.extend(new_cases)
 
 		return res.success((cases, else_case))
-	def for_expr(self):
+
+	def for_expr(self): # Handle for loops
 		res = ParseResult()
 
 		if not self.current_tok.matches(TT_KEYWORD, 'REPEAT'):
@@ -1066,6 +1129,7 @@ class Parser:
 		return res.success(WhileNode(condition, body, False))
 
 	###################################
+ # Call functions in Spindle
 	def call(self):
 		res = ParseResult()
 
@@ -1106,7 +1170,7 @@ class Parser:
 			return res.success(CallNode(atom, arg_nodes))
 		return res.success(atom)
 
-
+# Do things with numbers, while handling REPEAT, WHILE, and PROCEDURE
 	def atom(self):
 		res = ParseResult()
 		tok = self.current_tok
@@ -1172,7 +1236,7 @@ class Parser:
 			"Expected int, float, identifier, '+', '-', '(', 'IF','REPEAT UNTIL', 'REPEAT', 'PROCEDURE'"
 		))
 
-	def list_expr(self):
+	def list_expr(self): # Handle lists
 		res = ParseResult()
 		element_nodes = []
 		pos_start = self.current_tok.pos_start.copy()
@@ -1187,9 +1251,8 @@ class Parser:
 		self.advance()
 
 		if self.current_tok.type == TT_RSQUARE:
-			pass
-			#res.register_advancement()
-			#self.advance()
+			pass # Do nothing
+
 		else:
 			element_nodes.append(res.register(self.expr()))
 			if res.error:
@@ -1219,10 +1282,10 @@ class Parser:
 		pos_start,
 		self.current_tok.pos_end.copy()
 		))
-	def power(self):
+	def power(self): # Power Opperator. LEGACY
 		return self.bin_op(self.call, (TT_POW, ), self.factor)
 
-	def factor(self):
+	def factor(self): # Transforms numbers into positive and negitive counterparts
 		res = ParseResult()
 		tok = self.current_tok
 
@@ -1235,13 +1298,13 @@ class Parser:
 
 		return self.power()
 
-	def term(self):
+	def term(self): # Handle number expressiobs with * or /
 		return self.bin_op(self.factor, (TT_MUL, TT_DIV))
 
-	def arith_expr(self):
+	def arith_expr(self): # Handle number expressiobs with + or -
 		return self.bin_op(self.term, (TT_PLUS, TT_MINUS))
 	
-	def comp_expr(self):
+	def comp_expr(self): # Combines expressions
 		res = ParseResult()
 
 		if self.current_tok.matches(TT_KEYWORD, 'NOT'):
@@ -1263,23 +1326,23 @@ class Parser:
 
 		return res.success(node)
 	
-	def expr(self):
+	def expr(self): # Expressions! Includes assigning anything to a varible
 		res = ParseResult()
 
 		if self.current_tok.type == TT_IDENTIFIER and self.peek(1).type  in TT_EQ :
+			# Assigning a value to a varible
 			if self.peek(1).type not in  (TT_IDENTIFIER ,TT_EQ):
 				return res.failure(InvalidSyntaxError(
 					self.current_tok.pos_start, self.current_tok.pos_end,
 					"Expected '<-' or '<--'"
 				))
 			var_name = self.current_tok
-			#res.register_advancement()
 			self.advance()	
 			self.advance()
 			expr = res.register(self.expr())
 			if res.error: return res
 			return res.success(VarAssignNode(var_name, expr))
-		if self.current_tok.type == TT_LBRACE: # Fix for for loops
+		if self.current_tok.type == TT_LBRACE: # Fix for for loops. Skip past the {
 			self.advance()
 		node =  res.register(self.bin_op(self.comp_expr, ((TT_KEYWORD, 'AND'),(TT_KEYWORD, 'OR'))))
 		if res.error: 
@@ -1290,7 +1353,7 @@ class Parser:
 		return res.success(node)
 
 	
-	def func_def(self):
+	def func_def(self): # Define a function in Spindle. Syntax for it is here.
 		res = ParseResult()
 
 		if not self.current_tok.matches(TT_KEYWORD, 'PROCEDURE'):
@@ -1356,7 +1419,7 @@ class Parser:
 		res.register_advancement()
 		self.advance()
 
-		if self.current_tok.type == TT_LBRACE: #PROC a(b,c)***{*** --code-- }
+		if self.current_tok.type == TT_LBRACE: 
 			res.register_advancement()
 			self.advance()
 
@@ -1382,12 +1445,6 @@ class Parser:
 		body = res.register(self.statements())
 		if res.error: return res
 
-		'''if not self.current_tok.matches(TT_KEYWORD, 'END'):
-			return res.failure(InvalidSyntaxError(
-				self.current_tok.pos_start, self.current_tok.pos_end,
-				f"Expected 'END'"
-			))'''
-
 		res.register_advancement()
 		self.advance()
 		
@@ -1395,15 +1452,10 @@ class Parser:
 		var_name_tok,
 		arg_name_toks,
 		body, False
-		))
-
-
-
-
-		
+		))	
 
 	###################################
-
+	# Binary Operation between functions
 	def bin_op(self, func_a, ops, func_b=None):
 		if func_b == None:
 			func_b = func_a
@@ -1424,6 +1476,7 @@ class Parser:
 
 #######################################
 # RUNTIME RESULT
+# Did the program Run?
 #######################################
 
 class RTResult:
@@ -1470,7 +1523,7 @@ class RTResult:
 		return self
 	
 	def should_return(self):
-    # Note: this will allow you to continue and break outside the current function
+    # Note: this will allow you to continue and break outside the current function - ending the program
 		return (
 		self.error or
 		self.func_return_value or
@@ -1480,6 +1533,7 @@ class RTResult:
 
 #######################################
 # VALUES
+# Handles numbers and math
 #######################################
 class Value:
 	def __init__(self):
@@ -1495,6 +1549,7 @@ class Value:
 		self.context = context
 		return self
 
+# Update a number with arithmatic (+,-,*,/)... and **, but that's legacy
 	def added_to(self, other):
 		return None, self.illegal_operation(other)
 
@@ -1509,6 +1564,8 @@ class Value:
 
 	def powed_by(self, other):
 		return None, self.illegal_operation(other)
+
+# Handle comparasons
 
 	def get_comparison_eq(self, other):
 		return None, self.illegal_operation(other)
@@ -1554,11 +1611,12 @@ class Value:
 			self.context
 		)
 
+# The NUMBER class
 class Number(Value):
 	def __init__(self, value):
 		super().__init__()
 		self.value = value
-
+# Arithmatic 
 	def added_to(self, other):
 		if isinstance(other, Number):
 			return Number(self.value + other.value).set_context(self.context), None
@@ -1595,7 +1653,7 @@ class Number(Value):
 			return Number(self.value ** other.value).set_context(self.context), None
 		else:
 			return None, Value.illegal_operation(self, other)
-
+# Comparasons 
 	def get_comparison_eq(self, other):
 		if isinstance(other, Number):
 			return Number(int(self.value == other.value)).set_context(self.context), None
@@ -1631,7 +1689,7 @@ class Number(Value):
 			return Number(int(self.value >= other.value)).set_context(self.context), None
 		else:
 			return None, Value.illegal_operation(self, other)
-
+# Expressions
 	def anded_by(self, other):
 		if isinstance(other, Number):
 			return Number(int(self.value and other.value)).set_context(self.context), None
@@ -1658,31 +1716,32 @@ class Number(Value):
 	
 	def __repr__(self):
 		return str(self.value)
-	
+
+	# BUILT IN NUMBERS. Null is a special constant. Hopefully no one will ever need it. 
 Number.null = Number(-1.010203040506071) # Null constant - shell replaces with 'null'
 Number.false = Number(0)
 Number.true = Number(1)
 Number.math_PI = Number(math.pi)
 
 
-
+# Strings!
 class String(Value):
 	def __init__(self, value):
 		super().__init__()
 		self.value = value
-
+# You can add strings to concatnate them
 	def added_to(self, other):
 		if isinstance(other, String):
 			return String(self.value + other.value).set_context(self.context), None
 		else:
 			return None, Value.illegal_operation(self, other)
-
+# Multiply strings by a number works just like python.
 	def multed_by(self, other):
 		if isinstance(other, Number):
 			return String(self.value * other.value).set_context(self.context), None
 		else:
 			return None, Value.illegal_operation(self, other)
-
+# Strings are true if they are not empty 
 	def is_true(self):
 		return len(self.value) > 0
 
@@ -1698,16 +1757,18 @@ class String(Value):
 	def __repr__(self):
 		return f'"{self.value}"'
 
+# Lists (arrays)
 class List(Value):
   def __init__(self, elements):
     super().__init__()
     self.elements = elements
 
+# Add an element into a list
   def added_to(self, other):
     new_list = self.copy()
     new_list.elements.append(other)
     return new_list, None
-
+# Get rid of an element of a list
   def subbed_by(self, other):
     if isinstance(other, Number):
       new_list = self.copy()
@@ -1730,7 +1791,7 @@ class List(Value):
       return new_list, None
     else:
       return None, Value.illegal_operation(self, other)
-
+# Diving a list to get an element of it. Do not think of [listelements]/5 is something. Instead think of [listelements][list index]
   def dived_by(self, other):
     if isinstance(other, Number):
       try:
@@ -1744,17 +1805,19 @@ class List(Value):
     else:
       return None, Value.illegal_operation(self, other)
   
-  def copy(self):
+  def copy(self): # Copy a list
     copy = List(self.elements)
     copy.set_pos(self.pos_start, self.pos_end)
     copy.set_context(self.context)
     return copy
 
-  def __repr__(self):
+  def __repr__(self): # String repersentation of a list
     return ", ".join([str(x) for x in self.elements])
   def __str__(self):
     return f'[{", ".join([str(x) for x in self.elements])}]'
 	
+ 
+# The base function class. programmer and built in functions draw from this class
 class BaseFunction(Value):
 	def __init__(self,name):
 		super().__init__()
@@ -1799,6 +1862,7 @@ class BaseFunction(Value):
 		self.populate_args(arg_names, args, exec_ctx)
 		return res.success(None)
 
+# Handle functions!
 class Function(BaseFunction):
 	def __init__(self, name, body_node, arg_names, should_auto_return):
 		super().__init__(name)
@@ -1830,6 +1894,7 @@ class Function(BaseFunction):
 	def __repr__(self):
 		return f"<PROCEDURE {self.name}>"
 	
+ # Handle functions built into the language
 class BuiltInFunction(BaseFunction):
 	def __init__(self, name):
 		super().__init__(name)
@@ -1861,24 +1926,24 @@ class BuiltInFunction(BaseFunction):
 		return f"<built-in function {self.name}>"
 	
 #######################################
-# Built in Functions
+# Built in Functions List
 #######################################	
 
-	def execute_print(self, exec_ctx):
+	def execute_print(self, exec_ctx): # DELETE THIS FUNCTION. Already replaced with Display
 		print(str(exec_ctx.symbol_table.get('value')))
 		return RTResult().success(Number.null)
 	execute_print.arg_names = ["value"]
 
-	def execute_display(self, exec_ctx):
+	def execute_display(self, exec_ctx): # Displays a value to the console
 		print(str(exec_ctx.symbol_table.get('value')))
 		return RTResult().success(Number.null)
 	execute_display.arg_names = ["value"]
 
-	def execute_print_ret(self, exec_ctx):
+	def execute_print_ret(self, exec_ctx): # DELETE THIS
 		return RTResult().success(String(str(exec_ctx.symbol_table.get('value'))))
 	execute_print_ret.arg_names = ["value"]
 	
-	def execute_input(self, exec_ctx):
+	def execute_input(self, exec_ctx): # Note, combine this with execute_input_int. Should be simple
 		text = input()
 		return RTResult().success(String(text))
 	execute_input.arg_names = []
@@ -1894,12 +1959,13 @@ class BuiltInFunction(BaseFunction):
 		return RTResult().success(Number(number))
 	execute_input_int.arg_names = []
 
-	def execute_clear(self, exec_ctx):
+	def execute_clear(self, exec_ctx): # Clears ternimal screen
 		os.system('cls' if os.name == 'nt' else 'cls') 
 		return RTResult().success(Number.null)
 	execute_clear.arg_names = []
-
-	def execute_is_number(self, exec_ctx):
+ 
+ # is the parmeter a specific data type? Functions
+	def execute_is_number(self, exec_ctx): #
 		is_number = isinstance(exec_ctx.symbol_table.get("value"), Number)
 		return RTResult().success(Number.true if is_number else Number.false)
 	execute_is_number.arg_names = ["value"]
@@ -1919,6 +1985,7 @@ class BuiltInFunction(BaseFunction):
 		return RTResult().success(Number.true if is_number else Number.false)
 	execute_is_function.arg_names = ["value"]
 
+# Add an element to the list with a function!
 	def execute_append(self, exec_ctx):
 		list_ = exec_ctx.symbol_table.get("list")
 		value = exec_ctx.symbol_table.get("value")
@@ -1934,6 +2001,7 @@ class BuiltInFunction(BaseFunction):
 		return RTResult().success(Number.null)
 	execute_append.arg_names = ["list", "value"]
 
+# Get rid of the last element in a list
 	def execute_pop(self, exec_ctx):
 		list_ = exec_ctx.symbol_table.get("list")
 		index = exec_ctx.symbol_table.get("index")
@@ -1963,7 +2031,7 @@ class BuiltInFunction(BaseFunction):
 		return RTResult().success(element)
 	execute_pop.arg_names = ["list", "index"]
 
-	def execute_extend(self, exec_ctx):
+	def execute_extend(self, exec_ctx): # Combine two lists
 		listA = exec_ctx.symbol_table.get("listA")
 		listB = exec_ctx.symbol_table.get("listB")
 
@@ -1985,7 +2053,7 @@ class BuiltInFunction(BaseFunction):
 		return RTResult().success(Number.null)
 	execute_extend.arg_names = ["listA", "listB"]	
 
-	def execute_length(self, exec_ctx):
+	def execute_length(self, exec_ctx): # get the length of a list, starting at one
 		list_ = exec_ctx.symbol_table.get("list")
 
 		if not isinstance(list_, List):
@@ -1998,7 +2066,8 @@ class BuiltInFunction(BaseFunction):
 		return RTResult().success(Number(len(list_.elements)))
 	execute_length.arg_names = ["list"]
 
-	def execute_run(self, exec_ctx):
+# Commands
+	def execute_run(self, exec_ctx): # the RUN("") Command!!!!!!!
 		fn = exec_ctx.symbol_table.get("fn")
 
 		if not isinstance(fn, String):
@@ -2033,6 +2102,7 @@ class BuiltInFunction(BaseFunction):
 		return RTResult().success(Number.null)
 	execute_run.arg_names = ["fn"]
 
+# Map builtin functions to their class counterparts.
 BuiltInFunction.print       = BuiltInFunction("print")
 BuiltInFunction.print_ret   = BuiltInFunction("print_ret")
 BuiltInFunction.input       = BuiltInFunction("input")
@@ -2051,13 +2121,9 @@ BuiltInFunction.run      = BuiltInFunction("run")
 
 
 
-
-  
-
-
-
 #######################################
 # CONTEXT
+# Tells Spindle where it's at - whether it's in a file, function, or just running normally.
 #######################################
 
 class Context:
@@ -2069,7 +2135,7 @@ class Context:
 
 #######################################
 # SYMBOL TABLE
-# keeps track of vars and their values
+# Keeps track of varibles, lists, functions and their values
 #######################################		
 class SymbolTable:
 	def __init__(self, parent = None):
@@ -2089,6 +2155,7 @@ class SymbolTable:
 		del self.symbols[name]
 #######################################
 # INTERPRETER
+# Time to actually run the code. Names should tell you what each function does. 
 #######################################
 
 class Interpreter:
@@ -2129,7 +2196,7 @@ class Interpreter:
 		)
 
 
-	def visit_VarAccessNode(self, node, context):
+	def visit_VarAccessNode(self, node, context): # Get the value of a varible
 		res = RTResult()
 		var_name = node.var_name_tok.value
 		value = context.symbol_table.get(var_name)
@@ -2144,7 +2211,7 @@ class Interpreter:
 			return res.success(value)
 		
 		
-	def visit_VarAssignNode(self, node, context):
+	def visit_VarAssignNode(self, node, context): # Set the value of a varible
 		res = RTResult()
 		var_name = node.var_name_tok.value
 		value = res.register(self.visit(node.value_node, context))
@@ -2154,7 +2221,7 @@ class Interpreter:
 		context.symbol_table.set(var_name, value)
 		return res.success(value)
 
-
+# Visit a binary expression. Handles arithmatic expressions and comparasons. 
 	def visit_BinOpNode(self, node, context):
 		res = RTResult()
 		left = res.register(self.visit(node.left_node, context))
@@ -2190,13 +2257,12 @@ class Interpreter:
 			result, error = left.ored_by(right)
 		elif node.op_tok.matches(TT_KEYWORD, "NOT"):
 			result, error = left.notted()
-
 		if error:
 			return res.failure(error)
 		else:
 			return res.success(result.set_pos(node.pos_start, node.pos_end))
 
-	def visit_UnaryOpNode(self, node, context):
+	def visit_UnaryOpNode(self, node, context): # Allows you to "not" something. 
 		res = RTResult()
 		number = res.register(self.visit(node.node, context))
 		if res.should_return(): return res
@@ -2214,7 +2280,7 @@ class Interpreter:
 		else:
 			return res.success(number.set_pos(node.pos_start, node.pos_end))
 		
-	def visit_IfNode(self, node, context):
+	def visit_IfNode(self, node, context): # Visit if node
 		res = RTResult()
 		for condition, expr, should_return_null in node.cases:
 			condition_value = res.register(self.visit(condition, context))
@@ -2232,7 +2298,9 @@ class Interpreter:
 			return res.success(Number.null if should_return_null else else_value)
 
 		return res.success(Number.null)
+
 	def visit_int(self, node, context):
+		# Note, this intentionally does nothing. When the interpreter encounters a number, it looks for a visit_int function. Here it is. 
 		pass
 	def visit_ForNode(self, node, context):
 		res = RTResult()
@@ -2337,14 +2405,16 @@ class Interpreter:
 
 	def visit_BreakNode(self, node, context):
 		return RTResult().success_break()
+
 #######################################
-# RUN
+# SET THE DEFAULT VALUES OF THINGS
 #######################################
 global_symbol_table = SymbolTable()
 global_symbol_table.set("NULL", Number.null)
 global_symbol_table.set("FALSE", Number.false)
 global_symbol_table.set("TRUE", Number.true)
 global_symbol_table.set("MATH_PI", Number.math_PI) #Varible
+# MAP BUILT IN FUNCTIONS TO WHAT THEY'LL LOOK LIKE IN SPINDLE
 global_symbol_table.set("PRINT", BuiltInFunction.print)
 global_symbol_table.set("DISPLAY", BuiltInFunction.display)
 global_symbol_table.set("PRINT_RET", BuiltInFunction.print_ret)
@@ -2441,15 +2511,8 @@ def add_else_to_if(text):
     return return_text
 
 
-def text_to_tokens(text):
-	lexer = Lexer('SELF', text)
-	tokens, error = lexer.make_tokens()
-	if error: 
-		return error
-	else:
-		return tokens
-
 # This function handles RUN commands and calls the run_program for each semi parse generated by the semi_parse_string function
+# this function DOES NOT actually run the program, just the text it was given. 
 def run(fn, text):
 	program_text = ""
 	proc_flag = False
@@ -2489,13 +2552,13 @@ def run(fn, text):
 				if "<PROCEDURE" not in str(repr(result)):
 					print(str(repr(result)).replace("-1.010203040506071","").replace("[]","").replace("[, ]","")) 
 
-# Runs the program given to it by ththe
+# Runs the program given to it by the programmer. This function is called by the run function and actually "runs" the program
 def run_program(fn, text):
 	if not isinstance(text, list):
 	# Generate tokens
 		lexer = Lexer(fn, text)
 		tokens, error = lexer.make_tokens()
-		#print(tokens)
+		#print(tokens) <-- for debug purposes
 		if error: return None, error
 	else:
 		tokens = text
@@ -2519,13 +2582,14 @@ def generate_tokens(fn,text):
 	tokens, error = lexer.make_tokens()
 	return tokens
 
-def get_file_text(file_name):
+def get_file_text(file_name): # Get the text of a file, used by the RUN("") command.
 	try:
 		with open(file_name, "r") as f:
 			script = f.read()
 			return script
 	except Exception as e:
 		return "Error"
+# The home of the logic for the RUN("") command
 def execute_run(self, exec_ctx):
 		fn = exec_ctx.symbol_table.get("fn")
 
@@ -2559,4 +2623,20 @@ def execute_run(self, exec_ctx):
 			))
 
 		return RTResult().success(Number.null) 
+
+
+
+#######################################
+# SHELL
+# This serves to let people know that they are successfully running Spindle. 
+#######################################
+
+print("Welcome! \nYou now programming with Spindle ✨ \n")
+while True:
+    text = input('✨ | Spindle > ')
+    if text.strip() == "":
+        continue
+    result = run('<stdin>', text)
+    print("\n")
+    print(str(repr(result)).replace("None",""))
 
