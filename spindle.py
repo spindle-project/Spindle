@@ -287,46 +287,61 @@ class Lexer:
      				'''
 					if self.current_char == 'U':
 						self.advance()
-						self.advance()
+						if self.current_char == 'N':
+							self.advance()
+						else:
+							return [], InvalidSyntaxError( self.pos, self.pos, f"Expected RUN Command, got RU{self.current_char}")
 						tokens.append(self.make_identifier("RUN FUNC BYPASS"))
 						continue
 					# Now that we know we have "RE", we need to insure that we don't have a RETURN statement
 					elif self.current_char == 'E':
 						self.advance()
 						if self.current_char == 'P':
-							tokens.append(self.make_identifier("FOR LOOP BYPASS"))
+							char_list = ""
 							for i in range(3):
 								self.advance()
+								char_list += self.current_char
+							if char_list != "EAT":
+								return [], InvalidSyntaxError( self.pos, self.pos, f"Expected 'REPEAT' got REP{self.current_char}")
+    
+							''' 
+       						Now we know we have "REPEAT", but both of the "for" and "while" loops start with this, 
+       						so we have to check for a while loop
+							For loops: REPEAT x TIMES
+							While Loops: REPEAT UNTIL (expr)
+							'''
+							self.advance()
+							self.advance()
+							if self.current_char == 'U': # We have a while loop because the next character is a "U"
+								char_list = ""
+								for i in range(4):
+									self.advance()
+									char_list += self.current_char
+         
+								if char_list != "NTIL":
+									return [], InvalidSyntaxError( self.pos, self.pos, f"Expected 'UNTIL' got U{self.current_char}")
+     
+								self.advance()
+								if self.current_char != " ":
+									return [], ExpectedCharError( self.pos, self.pos, f"Expected ' ' got {self.current_char}")
+								tokens.append(self.make_identifier("WHILE_LOOP_BYPASS"))
+								tokens.append(Token(TT_KEYWORD, "NOT", self.pos, self.pos))
+								continue
+							# We do not have a while loop so we must have a for loop
+							tokens.append(self.make_identifier("FOR_LOOP_BYPASS"))
+							if self.make_identifier("FOR_LOOP_IDENITIFER_BYPASS") != None:
+								tokens.append(self.make_identifier("FOR_LOOP_IDENITIFER_BYPASS"))	
 							continue
-						# We have a return statement
-						for i in range(4):
-							self.advance()
-						tokens.append(Token(TT_KEYWORD, "RETURN", self.pos, self.pos))
-						continue
-					# We don't have a RETURN statement, so advance past the rest of the letters
-					# We really should be checking all of them.
-					for i in range(4):
-						self.advance()
-					'''
-					Now we know we have "REPEAT", but both for and while loops start with this, so we have to check for a while loop
-					For loops: REPEAT x TIMES
-					While Loops: REPEAT UNTIL (expr)
-     				'''
-					self.advance()
-					self.advance()
-					if self.current_char == 'U': # We have a while loop because the next character is a "U"
-						for i in range(6):
-							self.advance()
-						tokens.append(self.make_identifier("WHILE_LOOP_BYPASS"))
-						tokens.append(Token(TT_KEYWORD, "NOT", self.pos, self.pos))
-						continue
-						
-					else: # We do not have a while loop so we must have a for loop
-						tokens.append(self.make_identifier("FOR_LOOP_BYPASS"))
-						if self.make_identifier("FOR_LOOP_IDENITIFER_BYPASS") != None:
-							tokens.append(self.make_identifier("FOR_LOOP_IDENITIFER_BYPASS"))
-						continue	
-
+						else:
+							# We have a return statement
+							char_list = ""
+							for i in range(4):
+								self.advance()
+								char_list += self.current_char
+							if char_list != "TURN":
+								return [], InvalidSyntaxError( self.pos, self.pos, f"Expected 'RETURN' got RE{self.current_char}")
+							tokens.append(Token(TT_KEYWORD, "RETURN", self.pos, self.pos))
+							continue			
 				else: # We do not have any loop or keyword. 
 				# Append the identifier token like normal
 					tokens.append(self.make_identifier())
@@ -1033,7 +1048,7 @@ class Parser:
 		if not self.current_tok.matches(TT_KEYWORD, 'TIMES'):
 			return res.failure(InvalidSyntaxError(
 				self.current_tok.pos_start, self.current_tok.pos_end,
-				f"Expected 'TIMES'"
+				f"Your REPEAT or REPEAT UNTIL loop has the wrong syntax. Please deouble check that everything is spelled correctly."
 			))
 
 		res.register_advancement()
@@ -2529,7 +2544,7 @@ def run_program(fn, text):
 	# Generate tokens
 		lexer = Lexer(fn, text)
 		tokens, error = lexer.make_tokens()
-		#print(tokens) <-- for debug purposes
+		#print(tokens) # <-- for debug purposes
 		if error: return None, error
 	else:
 		tokens = text
