@@ -1831,7 +1831,6 @@ class BaseFunction(Value):
 	
 	def check_args(self, arg_names, args):
 		res = RTResult()
-
 		if len(args) > len(arg_names):
 			return res.failure(RTError(
 				self.pos_start, self.pos_end,
@@ -1905,7 +1904,6 @@ class BuiltInFunction(BaseFunction):
 
 		method_name = f'execute_{self.name}'
 		method = getattr(self,method_name,self.no_visit_method)
-
 		res.register(self.check_and_populate_args(method.arg_names, args, exec_ctx))
 		if res.should_return(): return res
 
@@ -1929,36 +1927,25 @@ class BuiltInFunction(BaseFunction):
 # Built in Functions List
 #######################################	
 
-	def execute_print(self, exec_ctx): # DELETE THIS FUNCTION. Already replaced with Display
-		print(str(exec_ctx.symbol_table.get('value')))
-		return RTResult().success(Number.null)
-	execute_print.arg_names = ["value"]
+
 
 	def execute_display(self, exec_ctx): # Displays a value to the console
 		print(str(exec_ctx.symbol_table.get('value')))
 		return RTResult().success(Number.null)
 	execute_display.arg_names = ["value"]
 
-	def execute_print_ret(self, exec_ctx): # DELETE THIS
-		return RTResult().success(String(str(exec_ctx.symbol_table.get('value'))))
-	execute_print_ret.arg_names = ["value"]
-	
-	def execute_input(self, exec_ctx): # Note, combine this with execute_input_int. Should be simple
+	# Input() function, takes input.
+	def execute_input(self, exec_ctx):
 		text = input()
-		return RTResult().success(String(text))
+		# Test for a number!
+		try: # we have one!
+			val = int(text)
+			return RTResult().success(Number(val))
+		except ValueError: # Not one
+			return RTResult().success(String(text))
 	execute_input.arg_names = []
 
-	def execute_input_int(self, exec_ctx):
-		while True:
-			text = input()
-			try:
-				number = int(text)
-				break
-			except ValueError:
-				print(f"'{text}' must be an integer. Try again!")
-		return RTResult().success(Number(number))
-	execute_input_int.arg_names = []
-
+ # Clear command. 
 	def execute_clear(self, exec_ctx): # Clears ternimal screen
 		os.system('cls' if os.name == 'nt' else 'cls') 
 		return RTResult().success(Number.null)
@@ -2078,7 +2065,6 @@ class BuiltInFunction(BaseFunction):
 			))
 
 		fn = fn.value
-
 		try:
 			with open(fn, "r") as f:
 				script = f.read()
@@ -2102,22 +2088,7 @@ class BuiltInFunction(BaseFunction):
 		return RTResult().success(Number.null)
 	execute_run.arg_names = ["fn"]
 
-# Map builtin functions to their class counterparts.
-BuiltInFunction.print       = BuiltInFunction("print")
-BuiltInFunction.print_ret   = BuiltInFunction("print_ret")
-BuiltInFunction.input       = BuiltInFunction("input")
-BuiltInFunction.input_int   = BuiltInFunction("input_int")
-BuiltInFunction.clear       = BuiltInFunction("clear")
-BuiltInFunction.is_number   = BuiltInFunction("is_number")
-BuiltInFunction.is_string   = BuiltInFunction("is_string")
-BuiltInFunction.is_list     = BuiltInFunction("is_list")
-BuiltInFunction.is_function = BuiltInFunction("is_function")
-BuiltInFunction.append      = BuiltInFunction("append")
-BuiltInFunction.pop         = BuiltInFunction("pop")
-BuiltInFunction.extend      = BuiltInFunction("extend")
-BuiltInFunction.display      = BuiltInFunction("display")
-BuiltInFunction.length      = BuiltInFunction("length")
-BuiltInFunction.run      = BuiltInFunction("run")
+
 
 
 
@@ -2409,17 +2380,31 @@ class Interpreter:
 #######################################
 # SET THE DEFAULT VALUES OF THINGS
 #######################################
+
+# Map builtin functions to their class counterparts.
+
+BuiltInFunction.input       = BuiltInFunction("input")
+BuiltInFunction.clear       = BuiltInFunction("clear")
+BuiltInFunction.is_number   = BuiltInFunction("is_number")
+BuiltInFunction.is_string   = BuiltInFunction("is_string")
+BuiltInFunction.is_list     = BuiltInFunction("is_list")
+BuiltInFunction.is_function = BuiltInFunction("is_function")
+BuiltInFunction.append      = BuiltInFunction("append")
+BuiltInFunction.pop         = BuiltInFunction("pop")
+BuiltInFunction.extend      = BuiltInFunction("extend")
+BuiltInFunction.display      = BuiltInFunction("display")
+BuiltInFunction.length      = BuiltInFunction("length")
+BuiltInFunction.run      = BuiltInFunction("run")
+
+
 global_symbol_table = SymbolTable()
 global_symbol_table.set("NULL", Number.null)
 global_symbol_table.set("FALSE", Number.false)
 global_symbol_table.set("TRUE", Number.true)
 global_symbol_table.set("MATH_PI", Number.math_PI) #Varible
 # MAP BUILT IN FUNCTIONS TO WHAT THEY'LL LOOK LIKE IN SPINDLE
-global_symbol_table.set("PRINT", BuiltInFunction.print)
 global_symbol_table.set("DISPLAY", BuiltInFunction.display)
-global_symbol_table.set("PRINT_RET", BuiltInFunction.print_ret)
 global_symbol_table.set("INPUT", BuiltInFunction.input)
-global_symbol_table.set("INPUT_INT", BuiltInFunction.input_int)
 global_symbol_table.set("CLEAR", BuiltInFunction.clear)
 global_symbol_table.set("CLS", BuiltInFunction.clear)
 global_symbol_table.set("IS_NUM", BuiltInFunction.is_number)
@@ -2504,8 +2489,7 @@ def add_else_to_if(text):
                     found_if = False
                     break
                 if ochar =="}":
-                    return_text += """ ELSE{
-					}"""
+                    return_text += " ELSE{ \n }"
                     found_if = False
 
     return return_text
@@ -2535,9 +2519,6 @@ def run(fn, text):
 		result,error = run_program('<stdin>', program_text)
 		if error: 
 			print(error.as_string())
-		else: 
-			if "<PROCEDURE" not in str(repr(result)):
-				print(str(repr(result)).replace("-1.010203040506071","").replace("[]","").replace("[, ]",""))
 
 	if proc_flag:
 		proc_flag = False
@@ -2548,9 +2529,7 @@ def run(fn, text):
 			if error: 
 				print(error.as_string())
 				break
-			else:
-				if "<PROCEDURE" not in str(repr(result)):
-					print(str(repr(result)).replace("-1.010203040506071","").replace("[]","").replace("[, ]","")) 
+
 
 # Runs the program given to it by the programmer. This function is called by the run function and actually "runs" the program
 def run_program(fn, text):
@@ -2631,12 +2610,10 @@ def execute_run(self, exec_ctx):
 # This serves to let people know that they are successfully running Spindle. 
 #######################################
 
-print("Welcome! \nYou now programming with Spindle ✨ \n")
+print("Howdy! You're now programming in Spindle 🧶 \n")
 while True:
-    text = input('✨ | Spindle > ')
+    text = input('🧶 | Spindle > ')
     if text.strip() == "":
         continue
-    result = run('<stdin>', text)
-    print("\n")
-    print(str(repr(result)).replace("None",""))
+    result = run('<stdin>', text) # The result is printed only when DISPLAY("somthing") is ran. 
 
