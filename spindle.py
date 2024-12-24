@@ -2,25 +2,19 @@
 # IMPORTS 
 # Spindle relys on these libaires to function
 '''
-string - Gives a list of ascii leters. May be hard coded soon
 os - Assess port to the os, allows the RUN("") command to fetch the name of the file the devloper wants to run
-math - Gives us an accurate definition of pi, Will definity be hardcoded soon 
 '''
 # As stated above, the function of the string and math imports are planned to be hardcoded in - so that they can be removed
 #######################################
-
-import string
 import os
-import math
-
 #######################################
 # CONSTANTS
 # Put any values that you wish to stay the same globally here.
 #######################################
-
+PI = 3.141592653589793
 DIGITS = '0123456789'
-LOWERCASE_LETTERS = string.ascii_lowercase
-UPPERCASE_LETTERS = string.ascii_uppercase
+LOWERCASE_LETTERS = "abcdefghijklmnopqrstuvwxyz"
+UPPERCASE_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 LETTERS = UPPERCASE_LETTERS + LOWERCASE_LETTERS
 LETTERS_DIGITS = LETTERS + DIGITS
 
@@ -34,8 +28,6 @@ IN_REPEAT_LOOP = False
 def CHANGE_IN_REPEAT_LOOP():
 	global IN_REPEAT_LOOP
 	IN_REPEAT_LOOP = not IN_REPEAT_LOOP
-
-
 #######################################
 # ERRORS
 #######################################
@@ -1721,7 +1713,7 @@ class Number(Value):
 Number.null = Number(-1.010203040506071) # Null constant - shell replaces with 'null'
 Number.false = Number(0)
 Number.true = Number(1)
-Number.math_PI = Number(math.pi)
+Number.math_PI = PI
 
 
 # Strings!
