@@ -1,76 +1,136 @@
-<div align="center"> <img src="https://cdn.glitch.global/e1bb975a-9da8-4eb1-bcd1-68066f8e9cd4/thumbnails%2Flogo-no-background.png?1734132398879" style="height: 200px; padding: 20px" />
-<h1><b>Spindle</b></h1> <p style="font-size:14px">  <b> Programming language that enables you to practice AP CSP Exam code as real, live code.  </b> 
-</b></b> <br> ⭐ Star us, it motivates us a lot!</div> <br>
-<!-- insert naviation guide and gif on using spindle once the website is created <-->
-<h1>💡 Core Principales</h1>
-<ol>
-<li><b>Quality</b>: We want Spindle code look and function as close as possible to how it will on exam day</li>
-<li><b>Simplicity</b>: We want to make learning computer principles as simple as possible for the average student</li>
-<li><b>Affordabilty</b>: Not everyone has money to buy expensive study materials, as such Spindle will stay free - forever</li>
-  <li><b>Transparency</b>: We are commited to keeping Spindle open to everyone who wishes to use it. Spindle will remain open-sourced.</li>
-	<li><b>Accessibility</b>: Some people interested in computer science may not have access to laptops, or knowledgeable of a filesystem, so we want to make it as easy to use Spindle as possible</li>
+<div align="center">
+  <img src="https://cdn.glitch.global/e1bb975a-9da8-4eb1-bcd1-68066f8e9cd4/thumbnails%2Flogo-no-background.png?1734132398879" style="height: 200px; padding: 20px" alt="Spindle Logo"/>
+  <h1><b>Spindle</b></h1>
+  <p style="font-size: 16px; font-weight: bold;">
+    The open-source programming language and learning platform for mastering AP CSP code—<br>
+    Practice, experiment, and learn with real, runnable code inspired by the AP Computer Science Principles exam.<br>
+    <br>
+    ⭐ <b>Star us, it motivates us a lot!</b>
+  </p>
+</div>
 
-</ol>
+---
 
-  
+> **Spindle** bridges the gap between AP® CSP theory and hands-on programming. Work with live code that mirrors exam syntax and logic—online or natively on your desktop, for free, forever.
 
+---
 
-<h1>💻 Sample Code </h1>
-<pre> <code>
+## 🚀 Table of Contents
+
+- [✨ Why Spindle?](#-why-spindle)
+- [💡 Core Principles](#-core-principles)
+- [💻 Sample Code](#-sample-code)
+- [🔨 How To Use](#-how-to-use)
+  - [Quick Start (In Your Browser)](#quick-start-in-your-browser)
+  - [Native/Desktop Usage](#nativemethod-running-on-desktop)
+- [🚂 Contributing](#-want-to-contribute)
+- [🌐 Community & Support](#-community--support)
+- [🧑‍⚖️ Legal Stuff](#-legal-stuff)
+
+---
+
+## ✨ Why Spindle?
+
+- **Exam-Ready:** Get comfortable with AP CSP-style questions and code in an environment that mimics the real exam.
+- **Accessible for Everyone:** Use Spindle on almost any device—no installation needed for web usage!
+- **Free & Open Source:** We believe learning should be accessible to all. No paywalls, ever.
+- **Community-Powered:** Spindle is built by and for students, educators, and enthusiasts. We welcome your ideas, bug reports, and contributions.
+
+---
+
+## 💡 Core Principles
+
+1. **Quality:** Spindle code is designed to look and function as close as possible to the AP CSP exam experience.
+2. **Simplicity:** We make learning core computer science principles easy for all students, regardless of background.
+3. **Affordability:** Spindle is—and always will be—100% free. No expensive textbooks or subscriptions required.
+4. **Transparency:** Our project is fully open-source. Everything from our code to our roadmap is public and community-driven.
+5. **Accessibility:** Not everyone has the latest laptop or is familiar with command lines. Spindle runs in your browser or on nearly any desktop.
+
+---
+
+## 💻 Sample Code
+
+```spindle
 # Displays "Hello Spindle!"
-	DISPLAY("Hello Spindle!")
-	</code> </pre>
+DISPLAY("Hello Spindle!")
+```
 
- 
-<h1>🔨 How To Use</h1> 
-<b>Spindle can be used natively on desktop, or for ease of use, anywhere via it's website</b>
-<h3>Quick Method (Running on website)</h3>
-<ol>
-	<li>Navigate to Spindle's website and click "code". Or just follow this link: <i>https://spdl.glitch.me/code</i></li>
-	<li>Type your code in the "Code Input" box (if you don't know what to try, use the sample code above!)</li>
-	<li>Click the run button!</li>
-</ol>
-<h3>Native Method (Running on desktop)</h3>
-<ol>
-  <li><strong>Download Spindle:</strong>
-    <p>Head over to the releases section of the Spindle GitHub repository and download the latest version of the `Spindle.py` and `shell.py` files: <a href="https://github.com/matthewl580/Spindle/releases">You can find them here!</a></p>
-    <p>You'll also want to download Python from its official website if you haven't already: <a href="https://www.python.org/downloads/">Which you can do here!</a></p>
-  </li>
-  <li><strong>Create a Project Folder:</strong>
-    <p>Create a new folder on your computer where you'll store your Spindle code. Name it whatever you like.</p>
-  </li>
-  <li><strong>Extract Spindle Files:</strong>
-    <p>Extract the downloaded files into your project folder. You should have two files in it so far: `Spindle.py` and `shell.py`.</p>
-  </li>
-  <li><strong>Write Your Spindle Code:</strong>
-    <p>Create a new text file within your project folder and save it with a filename ending in `.spdl` (e.g., `my_first_program.spdl`). This file will contain your Spindle code. Make sure you know the complete file name!</p>
-  </li>
-  <li><strong>Run Your Code:</strong>
-    <p>This can be done in two ways:</p>
-    <ul>
-      <li><strong>Simple Method:</strong>
-        <ol>
-          <li>Run the `shell.py` file.</li>
-          <li>Type `RUN("[FILENAME].spdl")`, replacing `[FILENAME]` with the actual filename of your Spindle code file (e.g., `my_first_program.spdl`).</li>
-        </ol>
-      </li>
-		 <li><strong>Advanced Method:</strong>
-        <ol>
-          <li>Open a terminal or command prompt.</li>
-          <li>Navigate to your project folder using the `cd` command.</li>
-          <li>Run the below command, replacing `[FILENAME]` with the actual filename of your Spindle code file (e.g., `my_first_program.spdl`):</li>
-          <pre><code>python shell.py RUN("[FILENAME].spdl")</code></pre>
-        </ol>
-      </li>
-    </ul>
-  </li>
-</ol>
-<h1>🚂 Want to Contribute?</h1>
-Here's the thing about open-source software, <i>anyone</i> can contribute - and all meaningful contributions are valuable. You don't have to even touch any code to help us, if you find a bug, reporting it to us will help us fix it quicker. For those who do know a little code, you can help to make Spindle better for all by adding collegeboard features and pruning unnecessary ones. We'll even feature you, it's the least we could do! 
+---
 
-<h1>🧑‍⚖️ Legal Stuff</h1>
-The Spindle programming language, website, logo and brand are all licensed under the MIT license -That means it's free for you to use in relation to Spindle. If you have more questions, please read the LICENCE file and ask us!
+## 🔨 How To Use
 
-<br> "AP CSP" is a shorthand for " AP Computer Science Principles", which is trademarked by collegeboard. So when we mention "AP CSP", mentally replace it with "AP® CSP" Collegeboard, who is not affiliated in any mannor with this project would also like us to say the following:<br>
-AP® is a trademark registered by the College Board, which is not affiliated with, and does not endorse, this project
+**Spindle can be run online in your browser or natively on your desktop. Choose what’s easiest for you!**
 
+### Quick Start (In Your Browser)
+
+1. **Visit Spindle's website:** [https://spdl.glitch.me/code](https://spdl.glitch.me/code)
+2. **Type your code** in the "Code Input" box (try the sample above if you’re new!)
+3. **Click the Run button** to see your code in action.
+
+### Native Method (Running on Desktop)
+
+1. **Download Spindle:**
+   - Go to our [Releases page](https://github.com/matthewl580/Spindle/releases) and download `Spindle.py` and `shell.py`.
+   - Make sure you also have Python installed ([Download Python](https://www.python.org/downloads/)).
+
+2. **Create a Project Folder:**
+   - Make a new folder (name it anything you like) for your Spindle files.
+
+3. **Extract Spindle Files:**
+   - Put `Spindle.py` and `shell.py` in your folder.
+
+4. **Write Your Spindle Code:**
+   - Make a new text file ending in `.spdl` (e.g., `my_first_program.spdl`) and write your code.
+
+5. **Run Your Code:**
+   - **Simple Method:**  
+     - Run `shell.py` (double-click or use Python).
+     - Type `RUN("[FILENAME].spdl")` (replace `[FILENAME]` with your code file).
+   - **Advanced Method:**  
+     - Open a terminal or command prompt.
+     - Use `cd` to go to your folder.
+     - Run:
+       ```bash
+       python shell.py RUN("[FILENAME].spdl")
+       ```
+
+---
+
+## 🚂 Want to Contribute?
+
+Open source means everyone can help!  
+- **Found a bug?** Report it in [issues](https://github.com/matthewl580/Spindle/issues)—it helps us make Spindle better.
+- **Have coding skills?** Help us add features, fix bugs, or improve documentation.
+- **Not sure where to start?** Check [Good First Issues](https://github.com/matthewl580/Spindle/labels/good%20first%20issue) or [CONTRIBUTING.md](https://github.com/matthewl580/Spindle/blob/main/CONTRIBUTING.md).
+
+We appreciate all contributions—big or small. Contributors are always credited!
+
+---
+
+## 🌐 Community & Support
+
+- [Website](https://spdl.netlify.app/)
+- [GitHub Discussions](https://github.com/matthewl580/Spindle/discussions)
+- [Releases](https://github.com/matthewl580/Spindle/releases)
+- [Documentation](https://github.com/matthewl580/Spindle/wiki)
+- [Contact](mailto:your-email@example.com) <!-- Replace with project contact if available -->
+
+> **Tip:** Have a question? Ask in [Discussions](https://github.com/matthewl580/Spindle/discussions) or open an issue.
+
+---
+
+## 🧑‍⚖️ Legal Stuff
+
+The Spindle programming language, website, logo, and brand are licensed under the MIT License.  
+You fully own all programs you create with Spindle. For more, see the [LICENSE](./LICENSE) file or ask us!
+
+> **Disclaimer:**  
+> "AP CSP" refers to "AP® Computer Science Principles", a trademark of College Board. This project is not affiliated with, endorsed by, or sponsored by College Board.  
+> AP® is a trademark registered by the College Board, which is not affiliated with, and does not endorse, this project.
+
+---
+
+<div align="center">
+  <b>Spindle: Making AP CSP coding accessible, real, and fun for everyone.<br>
+  💡 Join us and shape the next generation of computer science education!</b>
+</div>
