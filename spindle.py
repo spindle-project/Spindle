@@ -1,9 +1,42 @@
 #######################################
+#######################################
+# SPECIFIC TO THE WEB VERSION
+# Override the normal print() function with display_res() in the 
+#######################################
+# This is the shell, to run any sparkle program:
+# 1. Ensure you have sparkle.py in the same directory
+# 2. Run shell.py
+# 3. Type "RUN(" + [the file you want to run with the .spkl extension] + ")"
+#       - Example: RUN("HELLO_SPARKLE.spkl")
+# 4. Press enter, and if everything works correctly, you should get an output!
+
+import pyodide
+import js
+import builtins
+from pyscript import window
+
+def run_python_code(e):
+    # Load and execute the code from my_module.py
+    text_input = js.document.getElementById('codeInput').value
+    js.document.getElementById('output').textContent = ""
+    result = run('<INTERNAL>',text_input)
+    if result == None:
+        result = ""
+    # Use the function from my_module.py
+    display_res(result)
+
+
+def display_res(text):
+    output_div = js.document.getElementById('output')
+    if text == None:
+        text = ""
+    output_div.textContent +=  str(text) + '\n'
+
+
 # IMPORTS 
 # Spindle relys on these libaires to function
-'''
-os - Assess port to the os, allows the RUN("") command to fetch the name of the file the devloper wants to run
-'''
+#os - Assess port to the os, allows the RUN("") command to fetch the name of the file the devloper wants to run
+
 # As stated above, the function of the string and math imports are planned to be hardcoded in - so that they can be removed
 #######################################
 import os
@@ -874,8 +907,9 @@ class Parser:
 		res = ParseResult()
 		else_case = None
 		while self.current_tok.type == TT_NEWLINE:
-					res.register_advancement()
-					self.advance()
+			res.register_advancement()
+			self.advance()
+
 		if self.current_tok.matches(TT_KEYWORD, 'ELSE'):
 			res.register_advancement()
 			self.advance()
@@ -884,64 +918,48 @@ class Parser:
 				res.register_advancement()
 				self.advance()
 
-			if self.current_tok.type == TT_LBRACE: 
-					res.register_advancement()
-					self.advance()
+			if not self.current_tok.type == TT_LBRACE:
+				return res.failure(InvalidSyntaxError(
+					self.current_tok.pos_start, self.current_tok.pos_end,
+					"Expected '{'"
+				))
 
-			if self.current_tok.type == TT_NEWLINE:
+			res.register_advancement()
+			self.advance()
+
+			while self.current_tok.type == TT_NEWLINE:
 				res.register_advancement()
 				self.advance()
 
-				while self.current_tok.type == TT_NEWLINE:
-					res.register_advancement()
-					self.advance()
-					
-				statements = res.register(self.statements())
-				if res.error: return res
-				else_case = (statements, True)
-				while self.current_tok.type == TT_NEWLINE:
-					res.register_advancement()
-					self.advance()
-				if self.current_tok.type ==  TT_RBRACE:
-					res.register_advancement()
-					self.advance()
-				else:
-					return res.failure(InvalidSyntaxError(
-						self.current_tok.pos_start, self.current_tok.pos_end,
-						"Expected '}'"
-					))
-			else:
-				while self.current_tok.type == TT_NEWLINE:
-					res.register_advancement()
-					self.advance()
-				res.register_advancement()
-				self.advance()
-				while self.current_tok.type == TT_NEWLINE:
-					res.register_advancement()
-					self.advance()
-				expr = res.register(self.statements())
-				if res.error: 
-					return res
-				else_case = (expr, False)
-				res.register_advancement()
-				self.advance()
-				if self.current_tok.type in ( TT_RBRACE): 
-					res.register_advancement()
-					self.advance()
-			return res.success(else_case)
+			statements = res.register(self.statements())
+			if res.error: return res
+			else_case = (statements, True)
 
-	
+			while self.current_tok.type == TT_NEWLINE:
+				res.register_advancement()
+				self.advance()
+
+			if not self.current_tok.type == TT_RBRACE:
+				return res.failure(InvalidSyntaxError(
+					self.current_tok.pos_start, self.current_tok.pos_end,
+					"Expected '}'"
+				))
+
+			res.register_advancement()
+			self.advance()
+
+		return res.success(else_case)
 
 	def if_expr_b_or_c(self): # Figures out whether to handle this as an IF or ELSE case
 		res = ParseResult()
-		cases, else_case = [], None
+		else_case = None
 		while self.current_tok.type == TT_NEWLINE:
-					res.register_advancement()
-					self.advance()
+			res.register_advancement()
+			self.advance()
 		if self.current_tok.matches(TT_KEYWORD, "ELSE"):
 			else_case = res.register(self.if_expr_c())
 			if res.error: return res
-		return res.success((cases, else_case))
+		return res.success(else_case)
 	
 
 	def if_expr_cases(self, case_keyword): # Handle the code inside IF and ELSE statements
@@ -967,13 +985,17 @@ class Parser:
 		if not self.current_tok.type  == TT_RPAREN: #NOTE: in(TT_LBRACE , TT_RPAREN)
 			return res.failure(InvalidSyntaxError(
 				self.current_tok.pos_start, self.current_tok.pos_end,
-				"Expected '}' got " + f"{self.current_tok}"
+				"Expected ')'"
 			))
 		res.register_advancement()
 		self.advance()
-		if self.current_tok.type == TT_LBRACE:
-			res.register_advancement()
-			self.advance()
+		if not self.current_tok.type == TT_LBRACE:
+			return res.failure(InvalidSyntaxError(
+				self.current_tok.pos_start, self.current_tok.pos_end,
+				"Expected '{'"
+			))
+		res.register_advancement()
+		self.advance()
 		if self.current_tok.type == TT_NEWLINE:
 			while self.current_tok.type == TT_NEWLINE:
 				res.register_advancement()
@@ -988,12 +1010,10 @@ class Parser:
 			if self.current_tok.type == TT_RBRACE:
 				res.register_advancement()
 				self.advance()
-				all_cases = res.register(self.if_expr_b_or_c())
+				else_case = res.register(self.if_expr_b_or_c())
 				if res.error: return res
-				new_cases, else_case = all_cases
-				cases.extend(new_cases)
 			else:
-				all_cases = res.register(self.if_expr_b_or_c())
+				else_case = res.register(self.if_expr_b_or_c())
 				if res.error: return res
 				while self.current_tok.type == TT_NEWLINE:
 					res.register_advancement()
@@ -1001,17 +1021,13 @@ class Parser:
 				if self.current_tok.type == TT_RBRACE:
 					res.register_advancement()
 					self.advance()
-				new_cases, else_case = all_cases
-				cases.extend(new_cases)
 		else:
 			expr = res.register(self.statements())
 			if res.error: return res
 			cases.append((condition, expr, True))
 
-			all_cases = res.register(self.if_expr_b_or_c())
+			else_case = res.register(self.if_expr_b_or_c())
 			if res.error: return res
-			new_cases, else_case = all_cases
-			cases.extend(new_cases)
 
 		return res.success((cases, else_case))
 
@@ -1937,7 +1953,7 @@ class BuiltInFunction(BaseFunction):
 
 
 	def execute_display(self, exec_ctx): # Displays a value to the console
-		print(str(exec_ctx.symbol_table.get('value')))
+		display_res(str(exec_ctx.symbol_table.get('value')))
 		return RTResult().success(Number.null)
 	execute_display.arg_names = ["value"]
 
@@ -2516,25 +2532,33 @@ def run(fn, text):
 		text = str(get_file_text(str(tokens[2]).split(":")[1])).replace("{","{ \n")
 	else: 
 		text = text.replace("{","{ \n")
-    # Test wheater or not code contains a function.
+    # Test wheter or not code contains a function.
 	if "PROCEDURE" in text: # There's a procedure!!! Use sublists
 		proc_flag = True
 		program_text = semi_parse_string(text)
 	else :
-		program_text = semi_parse_string(add_else_to_if(text))[0]
+		# Check if there's already an ELSE block in the code
+		if "ELSE" in text:
+			program_text = semi_parse_string(text)[0]
+		else:
+			program_text = semi_parse_string(add_else_to_if(text))[0]
 		# Convert text to tokens for the else statement inserition
 		result,error = run_program('<stdin>', program_text)
 		if error: 
-			print(error.as_string())
+			display_res(error.as_string())
 
 	if proc_flag:
 		proc_flag = False
 		for i in range(len(program_text)): # Run each part of the text seperatly
 			if program_text[i].strip() == "":
 				continue
-			result,error = run_program('<stdin>', add_else_to_if(program_text[i]))
+			# Check if there's already an ELSE block in this part
+			if "ELSE" in program_text[i]:
+				result,error = run_program('<stdin>', program_text[i])
+			else:
+				result,error = run_program('<stdin>', add_else_to_if(program_text[i]))
 			if error: 
-				print(error.as_string())
+				display_res(error.as_string())
 				break
 
 
@@ -2609,18 +2633,3 @@ def execute_run(self, exec_ctx):
 			))
 
 		return RTResult().success(Number.null) 
-
-
-
-#######################################
-# SHELL
-# This serves to let people know that they are successfully running Spindle. 
-#######################################
-
-print("Howdy! You're now programming in Spindle 🧶 \n")
-while True:
-    text = input('🧶 | Spindle > ')
-    if text.strip() == "":
-        continue
-    result = run('<stdin>', text) # The result is printed only when DISPLAY("somthing") is ran. 
-
